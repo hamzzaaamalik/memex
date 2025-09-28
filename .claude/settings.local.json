@@ -20,7 +20,12 @@
       "Bash(node:*)",
       "Bash(curl:*)",
       "Bash(dir \"C:\\Users\\hamim\\Downloads\\mindcache-main2\\mindcache-main\\node-api\\controllers\")",
-      "Bash(timeout 10 npm start)"
+      "Bash(timeout 10 npm start)",
+      "Bash(cargo fmt:*)",
+      "Bash(cargo clippy:*)",
+      "Bash(cargo check:*)",
+      "Bash(cargo test:*)",
+      "Bash(npm test)"
     ],
     "deny": [],
     "ask": []

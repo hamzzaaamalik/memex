@@ -5,13 +5,12 @@ use rusqlite::{Connection, OpenFlags, OptionalExtension};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
-use super::{DatabaseConfig, models::*};
-use super::schema;
+use super::{models::*, DatabaseConfig};
 
 /// Simple database implementation without connection pooling
 pub struct SimpleDatabase {
     conn: Arc<Mutex<Connection>>,
-    config: DatabaseConfig,
+    _config: DatabaseConfig,
 }
 
 impl SimpleDatabase {
@@ -23,8 +22,7 @@ impl SimpleDatabase {
                 .with_context(|| format!("Failed to create database directory: {:?}", parent))?;
         }
 
-        let flags = OpenFlags::SQLITE_OPEN_READ_WRITE
-            | OpenFlags::SQLITE_OPEN_CREATE;
+        let flags = OpenFlags::SQLITE_OPEN_READ_WRITE | OpenFlags::SQLITE_OPEN_CREATE;
 
         let conn = Connection::open_with_flags(&config.path, flags)
             .with_context(|| format!("Failed to open database at: {}", config.path))?;
@@ -47,11 +45,15 @@ impl SimpleDatabase {
                 is_compressed INTEGER NOT NULL DEFAULT 0
             )",
             [],
-        ).context("Failed to create memories table")?;
+        )
+        .context("Failed to create memories table")?;
 
         let conn = Arc::new(Mutex::new(conn));
 
-        Ok(Self { conn, config })
+        Ok(Self {
+            conn,
+            _config: config,
+        })
     }
 
     /// Save a memory item
@@ -59,8 +61,8 @@ impl SimpleDatabase {
         let conn = self.conn.lock().unwrap();
 
         let memory_id = uuid::Uuid::new_v4().to_string();
-        let metadata_json = serde_json::to_string(&memory.metadata)
-            .context("Failed to serialize metadata")?;
+        let metadata_json =
+            serde_json::to_string(&memory.metadata).context("Failed to serialize metadata")?;
 
         conn.execute(
             "INSERT INTO memories (id, user_id, session_id, content, metadata, importance, created_at, updated_at, expires_at, ttl_hours, is_compressed)
@@ -94,39 +96,44 @@ impl SimpleDatabase {
              FROM memories WHERE id = ?1"
         )?;
 
-        let memory = stmt.query_row([memory_id], |row| {
-            let metadata_str: String = row.get(4)?;
-            let metadata = serde_json::from_str(&metadata_str).unwrap_or_default();
+        let memory = stmt
+            .query_row([memory_id], |row| {
+                let metadata_str: String = row.get(4)?;
+                let metadata = serde_json::from_str(&metadata_str).unwrap_or_default();
 
-            let created_at_str: String = row.get(6)?;
-            let updated_at_str: String = row.get(7)?;
-            let expires_at_str: Option<String> = row.get(8)?;
+                let created_at_str: String = row.get(6)?;
+                let updated_at_str: String = row.get(7)?;
+                let expires_at_str: Option<String> = row.get(8)?;
 
-            Ok(MemoryItem {
-                id: row.get(0)?,
-                user_id: row.get(1)?,
-                session_id: row.get(2)?,
-                content: row.get(3)?,
-                content_vector: None,
-                #[cfg(feature = "vector-search")]
-                embedding: None,
-                #[cfg(feature = "vector-search")]
-                embedding_model: None,
-                metadata,
-                created_at: chrono::DateTime::parse_from_rfc3339(&created_at_str)
-                    .unwrap().with_timezone(&chrono::Utc),
-                updated_at: chrono::DateTime::parse_from_rfc3339(&updated_at_str)
-                    .unwrap().with_timezone(&chrono::Utc),
-                expires_at: expires_at_str.and_then(|s|
-                    chrono::DateTime::parse_from_rfc3339(&s).ok()
-                        .map(|dt| dt.with_timezone(&chrono::Utc))
-                ),
-                importance: row.get(5)?,
-                ttl_hours: row.get::<_, Option<i64>>(9)?.map(|ttl| ttl as u32),
-                is_compressed: row.get::<_, i64>(10)? != 0,
-                compressed_from: Vec::new(),
+                Ok(MemoryItem {
+                    id: row.get(0)?,
+                    user_id: row.get(1)?,
+                    session_id: row.get(2)?,
+                    content: row.get(3)?,
+                    content_vector: None,
+                    #[cfg(feature = "vector-search")]
+                    embedding: None,
+                    #[cfg(feature = "vector-search")]
+                    embedding_model: None,
+                    metadata,
+                    created_at: chrono::DateTime::parse_from_rfc3339(&created_at_str)
+                        .unwrap()
+                        .with_timezone(&chrono::Utc),
+                    updated_at: chrono::DateTime::parse_from_rfc3339(&updated_at_str)
+                        .unwrap()
+                        .with_timezone(&chrono::Utc),
+                    expires_at: expires_at_str.and_then(|s| {
+                        chrono::DateTime::parse_from_rfc3339(&s)
+                            .ok()
+                            .map(|dt| dt.with_timezone(&chrono::Utc))
+                    }),
+                    importance: row.get(5)?,
+                    ttl_hours: row.get::<_, Option<i64>>(9)?.map(|ttl| ttl as u32),
+                    is_compressed: row.get::<_, i64>(10)? != 0,
+                    compressed_from: Vec::new(),
+                })
             })
-        }).optional()?;
+            .optional()?;
 
         Ok(memory)
     }
@@ -204,13 +211,16 @@ impl SimpleDatabase {
                 embedding_model: None,
                 metadata,
                 created_at: chrono::DateTime::parse_from_rfc3339(&created_at_str)
-                    .unwrap().with_timezone(&chrono::Utc),
+                    .unwrap()
+                    .with_timezone(&chrono::Utc),
                 updated_at: chrono::DateTime::parse_from_rfc3339(&updated_at_str)
-                    .unwrap().with_timezone(&chrono::Utc),
-                expires_at: expires_at_str.and_then(|s|
-                    chrono::DateTime::parse_from_rfc3339(&s).ok()
+                    .unwrap()
+                    .with_timezone(&chrono::Utc),
+                expires_at: expires_at_str.and_then(|s| {
+                    chrono::DateTime::parse_from_rfc3339(&s)
+                        .ok()
                         .map(|dt| dt.with_timezone(&chrono::Utc))
-                ),
+                }),
                 importance: row.get(5)?,
                 ttl_hours: row.get::<_, Option<i64>>(9)?.map(|ttl| ttl as u32),
                 is_compressed: row.get::<_, i64>(10)? != 0,
@@ -225,19 +235,19 @@ impl SimpleDatabase {
 
         // Get total count
         let mut count_query = String::from("SELECT COUNT(*) FROM memories WHERE 1=1");
-        if let Some(user_id) = &filter.user_id {
+        if filter.user_id.is_some() {
             count_query.push_str(" AND user_id = ?");
         }
-        if let Some(session_id) = &filter.session_id {
+        if filter.session_id.is_some() {
             count_query.push_str(" AND session_id = ?");
         }
-        if let Some(date_from) = &filter.date_from {
+        if filter.date_from.is_some() {
             count_query.push_str(" AND created_at >= ?");
         }
-        if let Some(date_to) = &filter.date_to {
+        if filter.date_to.is_some() {
             count_query.push_str(" AND created_at <= ?");
         }
-        if let Some(min_importance) = &filter.min_importance {
+        if filter.min_importance.is_some() {
             count_query.push_str(" AND importance >= ?");
         }
         if let Some(keywords) = &filter.keywords {

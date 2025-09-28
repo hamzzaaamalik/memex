@@ -1,6 +1,6 @@
 // examples/trading_journal.rs
 //! Advanced Trading Journal Example
-//! 
+//!
 //! This example demonstrates using MindCache as a sophisticated trading journal
 //! with features like:
 //! - Trade logging with structured metadata
@@ -9,11 +9,11 @@
 //! - Market insight organization
 //! - Batch operations for importing historical data
 
-use mindcache_core::*;
+use chrono::{DateTime, Duration, Utc};
 use mindcache_core::database::models::*;
+use mindcache_core::*;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use chrono::{DateTime, Utc, Duration};
-use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Trade {
@@ -31,8 +31,8 @@ struct Trade {
 struct MarketInsight {
     title: String,
     content: String,
-    category: String, // "technical", "fundamental", "macro", "sentiment"
-    impact: String,   // "high", "medium", "low"
+    category: String,  // "technical", "fundamental", "macro", "sentiment"
+    impact: String,    // "high", "medium", "low"
     timeframe: String, // "short", "medium", "long"
     confidence: f32,
 }
@@ -56,7 +56,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         default_memory_ttl_hours: Some(8760), // 1 year
         enable_compression: true,
         max_memories_per_user: 50000, // Large capacity for extensive trading history
-        importance_threshold: 0.2, // Keep even minor insights
+        importance_threshold: 0.2,    // Keep even minor insights
         ..Default::default()
     };
 
@@ -76,21 +76,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("✅ Initialized trading journal for trader: {}\n", trader_id);
 
     // Create sessions for different types of trading activities
-    let day_trading_session = session_manager.create_session(
-        trader_id, 
-        Some("Day Trading - Tech Stocks".to_string())
-    )?;
-    
+    let day_trading_session =
+        session_manager.create_session(trader_id, Some("Day Trading - Tech Stocks".to_string()))?;
+
     let swing_trading_session = session_manager.create_session(
-        trader_id, 
-        Some("Swing Trading - Market Leaders".to_string())
+        trader_id,
+        Some("Swing Trading - Market Leaders".to_string()),
     )?;
-    
-    let research_session = session_manager.create_session(
-        trader_id, 
-        Some("Market Research & Analysis".to_string())
-    )?;
-    
+
+    let research_session = session_manager
+        .create_session(trader_id, Some("Market Research & Analysis".to_string()))?;
+
     println!("📁 Created trading sessions:");
     println!("   • Day Trading: {}", day_trading_session);
     println!("   • Swing Trading: {}", swing_trading_session);
@@ -105,7 +101,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         MarketInsight {
             title: "SPY Testing Key Resistance".to_string(),
             content: "SPY approaching 450 resistance level with strong volume. \
-                     Watch for breakout or rejection. VIX at 18 suggests moderate uncertainty.".to_string(),
+                     Watch for breakout or rejection. VIX at 18 suggests moderate uncertainty."
+                .to_string(),
             category: "technical".to_string(),
             impact: "high".to_string(),
             timeframe: "short".to_string(),
@@ -114,7 +111,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         MarketInsight {
             title: "Fed Speech at 2 PM EST".to_string(),
             content: "Jerome Powell speaking at 2 PM. Market expecting dovish tone \
-                     on interest rates. Prepare for volatility in financial sector.".to_string(),
+                     on interest rates. Prepare for volatility in financial sector."
+                .to_string(),
             category: "macro".to_string(),
             impact: "high".to_string(),
             timeframe: "short".to_string(),
@@ -123,7 +121,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         MarketInsight {
             title: "AAPL Earnings Next Week".to_string(),
             content: "Apple earnings on Tuesday after market close. Options activity \
-                     suggests big move expected. iPhone sales in focus.".to_string(),
+                     suggests big move expected. iPhone sales in focus."
+                .to_string(),
             category: "fundamental".to_string(),
             impact: "medium".to_string(),
             timeframe: "medium".to_string(),
@@ -151,7 +150,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             content: format!("{}: {}", insight.title, insight.content),
             importance,
             metadata,
-            tags: vec!["analysis".to_string(), insight.category, "premarket".to_string()],
+            tags: vec![
+                "analysis".to_string(),
+                insight.category,
+                "premarket".to_string(),
+            ],
             ..Default::default()
         };
 
@@ -170,7 +173,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             strategy: "momentum_breakout".to_string(),
             confidence: 0.8,
             notes: "Clean breakout above 240 resistance with volume spike. \
-                    RSI showing strength but not overbought.".to_string(),
+                    RSI showing strength but not overbought."
+                .to_string(),
         },
         Trade {
             symbol: "TSLA".to_string(),
@@ -181,7 +185,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             strategy: "partial_profit".to_string(),
             confidence: 0.7,
             notes: "Taking partial profits at 2.5% gain. Holding rest for potential \
-                    continuation to 255 target.".to_string(),
+                    continuation to 255 target."
+                .to_string(),
         },
         Trade {
             symbol: "MSFT".to_string(),
@@ -192,7 +197,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             strategy: "support_bounce".to_string(),
             confidence: 0.6,
             notes: "Bounce off 375 support level. Fed speech risk but good R/R setup. \
-                    Stop at 372.".to_string(),
+                    Stop at 372."
+                .to_string(),
         },
         Trade {
             symbol: "MSFT".to_string(),
@@ -203,7 +209,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             strategy: "stop_loss".to_string(),
             confidence: 0.9,
             notes: "Stopped out as Fed speech caused tech selloff. Good risk management. \
-                    Small loss better than big loss.".to_string(),
+                    Small loss better than big loss."
+                .to_string(),
         },
     ];
 
@@ -211,14 +218,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let pnl = match trade.action.as_str() {
             "sell" => {
                 // This is simplified - in reality you'd track entry prices
-                if trade.symbol == "TSLA" { 6.25 * trade.quantity as f64 } // Profit
-                else { -3.45 * trade.quantity as f64 } // Loss
-            },
+                if trade.symbol == "TSLA" {
+                    6.25 * trade.quantity as f64
+                }
+                // Profit
+                else {
+                    -3.45 * trade.quantity as f64
+                } // Loss
+            }
             _ => 0.0,
         };
 
         let importance = if trade.action == "sell" {
-            if pnl > 0.0 { 0.8 } else { 0.9 } // Losses are high importance for learning
+            if pnl > 0.0 {
+                0.8
+            } else {
+                0.9
+            } // Losses are high importance for learning
         } else {
             0.6 // Entries are medium importance
         };
@@ -234,7 +250,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             metadata.insert("pnl".to_string(), format!("{:.2}", pnl));
         }
 
-        let session = if trade.strategy.contains("momentum") || trade.strategy.contains("breakout") {
+        let session = if trade.strategy.contains("momentum") || trade.strategy.contains("breakout")
+        {
             &day_trading_session
         } else {
             &swing_trading_session
@@ -256,20 +273,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             content,
             importance,
             metadata,
-            tags: vec!["trade".to_string(), trade.symbol.clone(), trade.action.clone()],
+            tags: vec![
+                "trade".to_string(),
+                trade.symbol.clone(),
+                trade.action.clone(),
+            ],
             created_at: trade.timestamp,
             updated_at: trade.timestamp,
             ..Default::default()
         };
 
         memory_manager.save_memory(memory)?;
-        
+
         if pnl != 0.0 {
-            println!("💰 Trade: {} {} shares at ${:.2} - P&L: ${:.2}", 
-                    trade.action.to_uppercase(), trade.quantity, trade.price, pnl);
+            println!(
+                "💰 Trade: {} {} shares at ${:.2} - P&L: ${:.2}",
+                trade.action.to_uppercase(),
+                trade.quantity,
+                trade.price,
+                pnl
+            );
         } else {
-            println!("📈 Trade: {} {} shares at ${:.2}", 
-                    trade.action.to_uppercase(), trade.quantity, trade.price);
+            println!(
+                "📈 Trade: {} {} shares at ${:.2}",
+                trade.action.to_uppercase(),
+                trade.quantity,
+                trade.price
+            );
         }
     }
 
@@ -283,9 +313,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
         RiskEvent {
             event_type: "correlation_risk".to_string(),
-            description: "TSLA and MSFT moving in lockstep - diversification compromised".to_string(),
+            description: "TSLA and MSFT moving in lockstep - diversification compromised"
+                .to_string(),
             severity: "low".to_string(),
-            action_taken: "Note for future: avoid simultaneous tech positions during events".to_string(),
+            action_taken: "Note for future: avoid simultaneous tech positions during events"
+                .to_string(),
         },
     ];
 
@@ -315,7 +347,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             content,
             importance,
             metadata,
-            tags: vec!["risk".to_string(), risk_event.event_type.clone(), "management".to_string()],
+            tags: vec![
+                "risk".to_string(),
+                risk_event.event_type.clone(),
+                "management".to_string(),
+            ],
             ..Default::default()
         };
 
@@ -373,9 +409,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     })?;
 
     for insight in &important_insights.data {
-        println!("  • {} (importance: {:.1})", 
-                insight.content.chars().take(80).collect::<String>() + "...", 
-                insight.importance);
+        println!(
+            "  • {} (importance: {:.1})",
+            insight.content.chars().take(80).collect::<String>() + "...",
+            insight.importance
+        );
     }
 
     // Demonstrate advanced querying
@@ -389,9 +427,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ..Default::default()
     })?;
 
-    println!("📊 TSLA-related activities: {}", tsla_activities.total_count);
+    println!(
+        "📊 TSLA-related activities: {}",
+        tsla_activities.total_count
+    );
     for activity in &tsla_activities.data {
-        println!("  • {}", activity.content.chars().take(60).collect::<String>() + "...");
+        println!(
+            "  • {}",
+            activity.content.chars().take(60).collect::<String>() + "..."
+        );
     }
 
     // Find momentum-based strategies
@@ -401,7 +445,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ..Default::default()
     })?;
 
-    println!("\n🚀 Momentum strategy trades: {}", momentum_trades.total_count);
+    println!(
+        "\n🚀 Momentum strategy trades: {}",
+        momentum_trades.total_count
+    );
 
     // Session summaries
     println!("\n📋 Session Summaries");
@@ -409,9 +456,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let sessions = session_manager.get_user_sessions(trader_id, Some(10), Some(0))?;
     for session in &sessions.data {
-        println!("\n📁 Session: {}", session.name.as_ref().unwrap_or(&"Unnamed".to_string()));
+        println!(
+            "\n📁 Session: {}",
+            session.name.as_ref().unwrap_or(&"Unnamed".to_string())
+        );
         println!("   Memories: {}", session.memory_count);
-        
+
         if session.memory_count > 0 {
             match session_manager.generate_session_summary(&session.id) {
                 Ok(summary) => {
@@ -427,4 +477,64 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Batch import example: Historical performance data
-    println
+    println!("\n📊 Batch Import Example");
+
+    let historical_trades = vec![
+        ("AAPL", "buy", 150, 145.20, "2024-01-15", "value_investing"),
+        ("AAPL", "sell", 150, 165.80, "2024-02-20", "value_investing"),
+        ("TSLA", "buy", 100, 180.50, "2024-01-10", "growth_strategy"),
+        ("MSFT", "buy", 75, 380.00, "2024-01-25", "dividend_growth"),
+    ];
+
+    let batch_session =
+        session_manager.create_session(user_id, Some("Batch Import Session".to_string()))?;
+
+    for (symbol, action, quantity, price, date, strategy) in historical_trades {
+        let content = format!(
+            "{} {} shares of {} at ${:.2} (Strategy: {})",
+            action.to_uppercase(),
+            quantity,
+            symbol,
+            price,
+            strategy
+        );
+
+        let mut metadata = HashMap::new();
+        metadata.insert("symbol".to_string(), symbol.to_string());
+        metadata.insert("action".to_string(), action.to_string());
+        metadata.insert("quantity".to_string(), quantity.to_string());
+        metadata.insert("price".to_string(), price.to_string());
+        metadata.insert("trade_date".to_string(), date.to_string());
+        metadata.insert("strategy".to_string(), strategy.to_string());
+
+        let importance = if action == "sell" { 0.8 } else { 0.6 };
+
+        let memory = MemoryItem {
+            user_id: user_id.to_string(),
+            session_id: batch_session.clone(),
+            content,
+            importance,
+            metadata,
+            ..Default::default()
+        };
+
+        memory_manager.save_memory(memory)?;
+    }
+
+    println!(
+        "✅ Successfully imported {} historical trades",
+        historical_trades.len()
+    );
+
+    // Final summary
+    let user_stats = memory_manager.get_user_memory_stats(user_id)?;
+    println!("\n🏁 Trading Journal Summary:");
+    println!("   Total Memories: {}", user_stats.total_memories);
+    println!("   Average Importance: {:.2}", user_stats.avg_importance);
+    println!("   Active Sessions: {}", sessions.data.len() + 1); // +1 for batch session
+
+    println!("\n🎯 Trading journal example completed successfully!");
+    println!("   Check your data with search, filtering, and analytics features.");
+
+    Ok(())
+}

@@ -1,11 +1,11 @@
 //! Async database operations for better Node.js integration
 
 use anyhow::{Context, Result};
-use tokio::task;
 use std::sync::Arc;
+use tokio::task;
 
-use super::{Database, DatabaseConfig, models::*};
-use super::vector::{VectorSearchEngine, VectorConfig, VectorSearchResult, HybridSearchResult};
+use super::vector::{HybridSearchResult, VectorConfig, VectorSearchEngine, VectorSearchResult};
+use super::{models::*, Database, DatabaseConfig};
 
 /// Async wrapper for database operations
 #[derive(Clone)]
@@ -28,9 +28,12 @@ impl AsyncDatabase {
     }
 
     /// Initialize with vector search support
-    pub async fn new_with_vector(config: DatabaseConfig, vector_config: VectorConfig) -> Result<Self> {
+    pub async fn new_with_vector(
+        config: DatabaseConfig,
+        vector_config: VectorConfig,
+    ) -> Result<Self> {
         let database = Self::new(config).await?;
-        
+
         let inner_clone = database.inner.clone();
         let vector_engine = task::spawn_blocking(move || {
             // Assuming we can extract a connection pool from Database
@@ -58,7 +61,10 @@ impl AsyncDatabase {
     }
 
     /// Async memory recall operation
-    pub async fn recall_memories(&self, filter: QueryFilter) -> Result<PaginatedResponse<MemoryItem>> {
+    pub async fn recall_memories(
+        &self,
+        filter: QueryFilter,
+    ) -> Result<PaginatedResponse<MemoryItem>> {
         let db = self.inner.clone();
         task::spawn_blocking(move || db.recall_memories(&filter))
             .await
@@ -90,7 +96,12 @@ impl AsyncDatabase {
     }
 
     /// Async user sessions retrieval
-    pub async fn get_user_sessions(&self, user_id: String, limit: Option<usize>, offset: Option<usize>) -> Result<PaginatedResponse<Session>> {
+    pub async fn get_user_sessions(
+        &self,
+        user_id: String,
+        limit: Option<usize>,
+        offset: Option<usize>,
+    ) -> Result<PaginatedResponse<Session>> {
         let db = self.inner.clone();
         task::spawn_blocking(move || db.get_user_sessions(&user_id, limit, offset))
             .await
@@ -114,48 +125,80 @@ impl AsyncDatabase {
     }
 
     /// Async vector search (if vector engine is available)
-    pub async fn search_similar(&self, query_embedding: Vec<f32>, model_name: String, limit: Option<usize>) -> Result<Vec<VectorSearchResult>> {
-        match &self.vector_engine {
-            Some(engine) => {
-                let engine = engine.clone();
-                task::spawn_blocking(move || engine.search_similar(&query_embedding, &model_name, limit))
-                    .await
-                    .context("Failed to spawn vector search task")?
-            }
-            None => Err(anyhow::anyhow!("Vector search engine not initialized"))
-        }
-    }
-
-    /// Async hybrid search (text + vector)
-    pub async fn hybrid_search(&self, text_query: String, vector_query: Vec<f32>, model_name: String, text_weight: f32, vector_weight: f32, limit: Option<usize>) -> Result<Vec<HybridSearchResult>> {
+    pub async fn search_similar(
+        &self,
+        query_embedding: Vec<f32>,
+        model_name: String,
+        limit: Option<usize>,
+    ) -> Result<Vec<VectorSearchResult>> {
         match &self.vector_engine {
             Some(engine) => {
                 let engine = engine.clone();
                 task::spawn_blocking(move || {
-                    engine.hybrid_search(&text_query, &vector_query, &model_name, text_weight, vector_weight, limit)
+                    engine.search_similar(&query_embedding, &model_name, limit)
+                })
+                .await
+                .context("Failed to spawn vector search task")?
+            }
+            None => Err(anyhow::anyhow!("Vector search engine not initialized")),
+        }
+    }
+
+    /// Async hybrid search (text + vector)
+    pub async fn hybrid_search(
+        &self,
+        text_query: String,
+        vector_query: Vec<f32>,
+        model_name: String,
+        text_weight: f32,
+        vector_weight: f32,
+        limit: Option<usize>,
+    ) -> Result<Vec<HybridSearchResult>> {
+        match &self.vector_engine {
+            Some(engine) => {
+                let engine = engine.clone();
+                task::spawn_blocking(move || {
+                    engine.hybrid_search(
+                        &text_query,
+                        &vector_query,
+                        &model_name,
+                        text_weight,
+                        vector_weight,
+                        limit,
+                    )
                 })
                 .await
                 .context("Failed to spawn hybrid search task")?
             }
-            None => Err(anyhow::anyhow!("Vector search engine not initialized"))
+            None => Err(anyhow::anyhow!("Vector search engine not initialized")),
         }
     }
 
     /// Store embedding for a memory
-    pub async fn store_embedding(&self, memory_id: String, embedding: Vec<f32>, model_name: String) -> Result<()> {
+    pub async fn store_embedding(
+        &self,
+        memory_id: String,
+        embedding: Vec<f32>,
+        model_name: String,
+    ) -> Result<()> {
         match &self.vector_engine {
             Some(engine) => {
                 let engine = engine.clone();
-                task::spawn_blocking(move || engine.store_embedding(&memory_id, &embedding, &model_name))
-                    .await
-                    .context("Failed to spawn store embedding task")?
+                task::spawn_blocking(move || {
+                    engine.store_embedding(&memory_id, &embedding, &model_name)
+                })
+                .await
+                .context("Failed to spawn store embedding task")?
             }
-            None => Err(anyhow::anyhow!("Vector search engine not initialized"))
+            None => Err(anyhow::anyhow!("Vector search engine not initialized")),
         }
     }
 
     /// Batch memory operations
-    pub async fn save_memories_batch(&self, memories: Vec<MemoryItem>) -> Result<Vec<Result<String, String>>> {
+    pub async fn save_memories_batch(
+        &self,
+        memories: Vec<MemoryItem>,
+    ) -> Result<Vec<Result<String, String>>> {
         let db = self.inner.clone();
         task::spawn_blocking(move || {
             let mut results = Vec::new();
@@ -172,38 +215,45 @@ impl AsyncDatabase {
     }
 
     /// Stream-based memory processing for large datasets
-    pub async fn save_memories_stream<S>(&self, mut stream: S) -> Result<Vec<Result<String, String>>>
+    pub async fn save_memories_stream<S>(
+        &self,
+        mut stream: S,
+    ) -> Result<Vec<Result<String, String>>>
     where
         S: futures::Stream<Item = MemoryItem> + Send + Unpin + 'static,
     {
         use futures::StreamExt;
-        
+
         let db = self.inner.clone();
         let mut results = Vec::new();
-        
+
         while let Some(memory) = stream.next().await {
             let db_clone = db.clone();
             let result = task::spawn_blocking(move || db_clone.save_memory(&memory))
                 .await
                 .context("Failed to spawn memory save task")?;
-            
+
             match result {
                 Ok(id) => results.push(Ok(id)),
                 Err(e) => results.push(Err(e.to_string())),
             }
         }
-        
+
         Ok(results)
     }
 
     /// Async memory export with progress tracking
-    pub async fn export_user_memories_with_progress<F>(&self, user_id: String, progress_callback: F) -> Result<Vec<MemoryItem>>
+    pub async fn export_user_memories_with_progress<F>(
+        &self,
+        user_id: String,
+        progress_callback: F,
+    ) -> Result<Vec<MemoryItem>>
     where
         F: Fn(usize, usize) + Send + Sync + 'static,
     {
         let db = self.inner.clone();
         let progress_callback = Arc::new(progress_callback);
-        
+
         task::spawn_blocking(move || {
             // First, get total count
             let total_filter = QueryFilter {
@@ -213,11 +263,11 @@ impl AsyncDatabase {
             };
             let total_response = db.recall_memories(&total_filter)?;
             let total_count = total_response.total_count as usize;
-            
+
             let mut all_memories = Vec::new();
             let mut offset = 0;
             let limit = 100; // Process in chunks
-            
+
             loop {
                 let filter = QueryFilter {
                     user_id: Some(user_id.clone()),
@@ -225,23 +275,23 @@ impl AsyncDatabase {
                     offset: Some(offset),
                     ..Default::default()
                 };
-                
+
                 let response = db.recall_memories(&filter)?;
                 if response.data.is_empty() {
                     break;
                 }
-                
+
                 all_memories.extend(response.data);
                 offset += limit;
-                
+
                 // Call progress callback
                 progress_callback(all_memories.len(), total_count);
-                
+
                 if !response.has_next {
                     break;
                 }
             }
-            
+
             Ok(all_memories)
         })
         .await
@@ -264,7 +314,7 @@ impl AsyncDatabase {
     pub async fn health_check(&self) -> Result<DatabaseHealth> {
         let db = self.inner.clone();
         let vector_engine = self.vector_engine.clone();
-        
+
         task::spawn_blocking(move || {
             let mut health = DatabaseHealth {
                 database_accessible: false,
@@ -272,13 +322,13 @@ impl AsyncDatabase {
                 pool_status: None,
                 last_error: None,
             };
-            
+
             // Test basic database access
             match db.get_stats() {
                 Ok(_) => health.database_accessible = true,
                 Err(e) => health.last_error = Some(e.to_string()),
             }
-            
+
             // Test vector search if available
             if let Some(engine) = vector_engine {
                 match engine.get_vector_stats() {
@@ -290,10 +340,10 @@ impl AsyncDatabase {
                     }
                 }
             }
-            
+
             // Get pool status
             health.pool_status = Some(db.get_pool_status());
-            
+
             Ok(health)
         })
         .await
@@ -312,8 +362,8 @@ pub struct DatabaseHealth {
 
 impl DatabaseHealth {
     pub fn is_healthy(&self) -> bool {
-        self.database_accessible && 
-        self.pool_status.as_ref().map_or(true, |s| s.is_healthy()) &&
-        self.last_error.is_none()
+        self.database_accessible
+            && self.pool_status.as_ref().map_or(true, |s| s.is_healthy())
+            && self.last_error.is_none()
     }
 }

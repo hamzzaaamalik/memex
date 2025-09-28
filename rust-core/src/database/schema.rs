@@ -212,7 +212,8 @@ pub fn get_migrations() -> Vec<Migration> {
                 DROP TABLE IF EXISTS memories;
                 DROP TABLE IF EXISTS sessions;
                 DROP TABLE IF EXISTS users;
-            "#.to_string(),
+            "#
+            .to_string(),
         },
         // Future migrations can be added here
     ]
@@ -235,7 +236,7 @@ pub fn get_schema_version(conn: &rusqlite::Connection) -> rusqlite::Result<u32> 
         "#,
         [],
     )?;
-    
+
     match conn.query_row(
         "SELECT value FROM system_config WHERE key = ?1",
         [SCHEMA_VERSION_KEY],
@@ -267,33 +268,44 @@ pub fn run_migrations(conn: &rusqlite::Connection) -> anyhow::Result<()> {
     let current_version = get_schema_version(conn)?;
     let migrations = get_migrations();
     let latest_version = migrations.iter().map(|m| m.version).max().unwrap_or(0);
-    
+
     if current_version >= latest_version {
-        log::info!("Database schema is up to date (version {})", current_version);
+        log::info!(
+            "Database schema is up to date (version {})",
+            current_version
+        );
         return Ok(());
     }
-    
-    log::info!("Migrating database from version {} to {}", current_version, latest_version);
-    
+
+    log::info!(
+        "Migrating database from version {} to {}",
+        current_version,
+        latest_version
+    );
+
     // Run migrations in order
     for migration in migrations {
         if migration.version > current_version {
-            log::info!("Running migration {}: {}", migration.version, migration.description);
-            
+            log::info!(
+                "Running migration {}: {}",
+                migration.version,
+                migration.description
+            );
+
             let tx = conn.unchecked_transaction()?;
-            
+
             // Execute migration SQL
             tx.execute_batch(&migration.up_sql)?;
-            
+
             // Update schema version
             set_schema_version(&tx, migration.version)?;
-            
+
             tx.commit()?;
-            
+
             log::info!("Migration {} completed successfully", migration.version);
         }
     }
-    
+
     log::info!("All migrations completed successfully");
     Ok(())
 }
@@ -302,16 +314,16 @@ pub fn run_migrations(conn: &rusqlite::Connection) -> anyhow::Result<()> {
 mod tests {
     use super::*;
     use rusqlite::Connection;
-    
+
     #[test]
     fn test_schema_creation() {
         let conn = Connection::open_in_memory().unwrap();
-        
+
         // Execute schema
         conn.execute_batch(SCHEMA_SQL).unwrap();
         conn.execute_batch(INDEXES_SQL).unwrap();
         conn.execute_batch(FTS_SQL).unwrap();
-        
+
         // Verify tables exist
         let tables: Vec<String> = conn
             .prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
@@ -320,10 +332,10 @@ mod tests {
             .unwrap()
             .collect::<Result<Vec<_>, _>>()
             .unwrap();
-        
+
         let expected_tables = vec![
             "compressed_memories",
-            "decay_runs", 
+            "decay_runs",
             "memories",
             "memories_fts",
             "session_summaries",
@@ -332,64 +344,72 @@ mod tests {
             "system_config",
             "users",
         ];
-        
+
         for table in expected_tables {
-            assert!(tables.contains(&table.to_string()), "Missing table: {}", table);
+            assert!(
+                tables.contains(&table.to_string()),
+                "Missing table: {}",
+                table
+            );
         }
     }
-    
+
     #[test]
     fn test_fts5_functionality() {
         let conn = Connection::open_in_memory().unwrap();
-        
+
         // Create schema
         conn.execute_batch(SCHEMA_SQL).unwrap();
         conn.execute_batch(FTS_SQL).unwrap();
-        
+
         // Insert test data
         conn.execute(
             "INSERT INTO memories (id, user_id, session_id, content) VALUES ('1', 'user1', 'session1', 'This is about trading stocks')",
             [],
         ).unwrap();
-        
+
         conn.execute(
             "INSERT INTO memories (id, user_id, session_id, content) VALUES ('2', 'user1', 'session1', 'This is about crypto trading')",
             [],
         ).unwrap();
-        
+
         // Test FTS search
-        let count: i64 = conn.query_row(
-            "SELECT COUNT(*) FROM memories_fts WHERE memories_fts MATCH 'trading'",
-            [],
-            |row| Ok(row.get(0)?),
-        ).unwrap();
-        
+        let count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM memories_fts WHERE memories_fts MATCH 'trading'",
+                [],
+                |row| Ok(row.get(0)?),
+            )
+            .unwrap();
+
         assert_eq!(count, 2);
-        
-        let count: i64 = conn.query_row(
-            "SELECT COUNT(*) FROM memories_fts WHERE memories_fts MATCH 'stocks'",
-            [],
-            |row| Ok(row.get(0)?),
-        ).unwrap();
-        
+
+        let count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM memories_fts WHERE memories_fts MATCH 'stocks'",
+                [],
+                |row| Ok(row.get(0)?),
+            )
+            .unwrap();
+
         assert_eq!(count, 1);
     }
-    
+
     #[test]
     fn test_migration_system() {
         let conn = Connection::open_in_memory().unwrap();
-        
+
         // Initial version should be 0
         assert_eq!(get_schema_version(&conn).unwrap(), 0);
-        
+
         // Run migrations
         run_migrations(&conn).unwrap();
-        
+
         // Should be at latest version
         let migrations = get_migrations();
         let latest_version = migrations.iter().map(|m| m.version).max().unwrap_or(0);
         assert_eq!(get_schema_version(&conn).unwrap(), latest_version);
-        
+
         // Running again should be no-op
         run_migrations(&conn).unwrap();
         assert_eq!(get_schema_version(&conn).unwrap(), latest_version);

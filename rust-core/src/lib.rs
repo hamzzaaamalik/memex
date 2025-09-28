@@ -3,10 +3,10 @@
 //! A high-performance memory management system with intelligent decay,
 //! full-text search, and session organization capabilities.
 
-pub mod database;
-pub mod core;
-pub mod ffi;
 pub mod cli;
+pub mod core;
+pub mod database;
+pub mod ffi;
 
 #[cfg(feature = "async")]
 pub mod async_db {
@@ -14,10 +14,10 @@ pub mod async_db {
 }
 
 // Re-export commonly used types
-pub use database::{Database, DatabaseConfig};
-pub use database::simple_db::SimpleDatabase;
-pub use database::models::*;
 pub use core::*;
+pub use database::models::*;
+pub use database::simple_db::SimpleDatabase;
+pub use database::{Database, DatabaseConfig};
 
 // Re-export async types when feature is enabled
 #[cfg(feature = "async")]
@@ -25,13 +25,15 @@ pub use database::async_db::AsyncDatabase;
 
 // Re-export vector types when feature is enabled
 #[cfg(feature = "vector-search")]
-pub use database::vector::{VectorConfig, VectorSearchEngine, VectorSearchResult, HybridSearchResult};
+pub use database::vector::{
+    HybridSearchResult, VectorConfig, VectorSearchEngine, VectorSearchResult,
+};
 
 // FFI implementations using actual database
+use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::ptr;
-use std::collections::HashMap;
 use std::sync::Mutex;
 
 // Global instance storage for FFI
@@ -92,7 +94,7 @@ pub extern "C" fn mindcache_init_with_config(config_json: *const c_char) -> usiz
             Ok(mut instances) => {
                 instances.insert(instance_id, database);
                 Some(instance_id)
-            },
+            }
             Err(e) => {
                 eprintln!("Error storing instance: {}", e);
                 None
@@ -129,6 +131,7 @@ pub extern "C" fn mindcache_destroy(handle: usize) {
 }
 
 #[no_mangle]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn mindcache_save(
     handle: usize,
     user_id: *const c_char,
@@ -193,7 +196,11 @@ pub extern "C" fn mindcache_save(
                 None
             },
             importance: importance.clamp(0.0, 1.0),
-            ttl_hours: if ttl_hours > 0 { Some(ttl_hours as u32) } else { None },
+            ttl_hours: if ttl_hours > 0 {
+                Some(ttl_hours as u32)
+            } else {
+                None
+            },
             is_compressed: false,
             compressed_from: Vec::new(),
         };
@@ -213,6 +220,7 @@ pub extern "C" fn mindcache_save(
 }
 
 #[no_mangle]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn mindcache_get_memory(handle: usize, memory_id: *const c_char) -> *mut c_char {
     let result = std::panic::catch_unwind(|| {
         if handle == 0 || memory_id.is_null() {
@@ -239,6 +247,7 @@ pub extern "C" fn mindcache_get_memory(handle: usize, memory_id: *const c_char) 
 }
 
 #[no_mangle]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn mindcache_recall(handle: usize, filter_json: *const c_char) -> *mut c_char {
     let result = std::panic::catch_unwind(|| {
         if handle == 0 {
@@ -303,6 +312,7 @@ pub extern "C" fn mindcache_error_message(error_code: i32) -> *mut c_char {
 }
 
 #[no_mangle]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn mindcache_free_string(ptr: *mut c_char) {
     if !ptr.is_null() {
         unsafe {
@@ -320,26 +330,94 @@ pub extern "C" fn mindcache_version() -> *mut c_char {
 }
 
 // Stub implementations for functions not yet implemented
-#[no_mangle] pub extern "C" fn mindcache_save_batch(_h: usize, _m: *const c_char, _f: bool) -> *mut c_char { ptr::null_mut() }
-#[no_mangle] pub extern "C" fn mindcache_search(_h: usize, _u: *const c_char, _q: *const c_char, _l: i32, _o: i32) -> *mut c_char { ptr::null_mut() }
-#[no_mangle] pub extern "C" fn mindcache_update_memory(_h: usize, _m: *const c_char, _u: *const c_char) -> bool { false }
-#[no_mangle] pub extern "C" fn mindcache_delete_memory(_h: usize, _m: *const c_char) -> bool { false }
-#[no_mangle] pub extern "C" fn mindcache_create_session(_h: usize, _u: *const c_char, _n: *const c_char) -> *mut c_char { ptr::null_mut() }
-#[no_mangle] pub extern "C" fn mindcache_get_user_sessions(_h: usize, _u: *const c_char, _l: i32, _o: i32) -> *mut c_char { ptr::null_mut() }
-#[no_mangle] pub extern "C" fn mindcache_summarize_session(_h: usize, _s: *const c_char) -> *mut c_char { ptr::null_mut() }
-#[no_mangle] pub extern "C" fn mindcache_search_sessions(_h: usize, _u: *const c_char, _k: *const c_char) -> *mut c_char { ptr::null_mut() }
-#[no_mangle] pub extern "C" fn mindcache_delete_session(_h: usize, _s: *const c_char, _d: bool) -> bool { false }
-#[no_mangle] pub extern "C" fn mindcache_decay(_h: usize) -> *mut c_char { ptr::null_mut() }
-#[no_mangle] pub extern "C" fn mindcache_decay_analyze(_h: usize) -> *mut c_char { ptr::null_mut() }
-#[no_mangle] pub extern "C" fn mindcache_update_decay_policy(_h: usize, _p: *const c_char) -> bool { false }
-#[no_mangle] pub extern "C" fn mindcache_get_stats(_h: usize) -> *mut c_char { ptr::null_mut() }
-#[no_mangle] pub extern "C" fn mindcache_export_user_memories(_h: usize, _u: *const c_char) -> *mut c_char { ptr::null_mut() }
-#[no_mangle] pub extern "C" fn mindcache_get_user_stats(_h: usize, _u: *const c_char) -> *mut c_char { ptr::null_mut() }
-#[no_mangle] pub extern "C" fn mindcache_get_session_analytics(_h: usize, _u: *const c_char) -> *mut c_char { ptr::null_mut() }
+#[no_mangle]
+pub extern "C" fn mindcache_save_batch(_h: usize, _m: *const c_char, _f: bool) -> *mut c_char {
+    ptr::null_mut()
+}
+#[no_mangle]
+pub extern "C" fn mindcache_search(
+    _h: usize,
+    _u: *const c_char,
+    _q: *const c_char,
+    _l: i32,
+    _o: i32,
+) -> *mut c_char {
+    ptr::null_mut()
+}
+#[no_mangle]
+pub extern "C" fn mindcache_update_memory(_h: usize, _m: *const c_char, _u: *const c_char) -> bool {
+    false
+}
+#[no_mangle]
+pub extern "C" fn mindcache_delete_memory(_h: usize, _m: *const c_char) -> bool {
+    false
+}
+#[no_mangle]
+pub extern "C" fn mindcache_create_session(
+    _h: usize,
+    _u: *const c_char,
+    _n: *const c_char,
+) -> *mut c_char {
+    ptr::null_mut()
+}
+#[no_mangle]
+pub extern "C" fn mindcache_get_user_sessions(
+    _h: usize,
+    _u: *const c_char,
+    _l: i32,
+    _o: i32,
+) -> *mut c_char {
+    ptr::null_mut()
+}
+#[no_mangle]
+pub extern "C" fn mindcache_summarize_session(_h: usize, _s: *const c_char) -> *mut c_char {
+    ptr::null_mut()
+}
+#[no_mangle]
+pub extern "C" fn mindcache_search_sessions(
+    _h: usize,
+    _u: *const c_char,
+    _k: *const c_char,
+) -> *mut c_char {
+    ptr::null_mut()
+}
+#[no_mangle]
+pub extern "C" fn mindcache_delete_session(_h: usize, _s: *const c_char, _d: bool) -> bool {
+    false
+}
+#[no_mangle]
+pub extern "C" fn mindcache_decay(_h: usize) -> *mut c_char {
+    ptr::null_mut()
+}
+#[no_mangle]
+pub extern "C" fn mindcache_decay_analyze(_h: usize) -> *mut c_char {
+    ptr::null_mut()
+}
+#[no_mangle]
+pub extern "C" fn mindcache_update_decay_policy(_h: usize, _p: *const c_char) -> bool {
+    false
+}
+#[no_mangle]
+pub extern "C" fn mindcache_get_stats(_h: usize) -> *mut c_char {
+    ptr::null_mut()
+}
+#[no_mangle]
+pub extern "C" fn mindcache_export_user_memories(_h: usize, _u: *const c_char) -> *mut c_char {
+    ptr::null_mut()
+}
+#[no_mangle]
+pub extern "C" fn mindcache_get_user_stats(_h: usize, _u: *const c_char) -> *mut c_char {
+    ptr::null_mut()
+}
+#[no_mangle]
+pub extern "C" fn mindcache_get_session_analytics(_h: usize, _u: *const c_char) -> *mut c_char {
+    ptr::null_mut()
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use validator::Validate;
 
     #[test]
     fn test_basic_functionality() {

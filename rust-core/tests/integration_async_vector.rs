@@ -3,18 +3,22 @@
 #[cfg(all(feature = "async", feature = "vector-search"))]
 mod async_vector_tests {
     use super::super::*;
-    use mindcache_core::database::async_db::AsyncDatabase;
-    use mindcache_core::database::vector::VectorConfig;
     use mindcache_core::core::async_memory::AsyncMemoryManager;
     use mindcache_core::core::{MindCacheConfig, RequestValidator};
+    use mindcache_core::database::async_db::AsyncDatabase;
     use mindcache_core::database::models::*;
+    use mindcache_core::database::vector::VectorConfig;
     use tempfile::TempDir;
     use tokio;
 
     async fn setup_async_test_environment() -> (AsyncMemoryManager, TempDir) {
         let temp_dir = TempDir::new().unwrap();
         let db_config = DatabaseConfig {
-            path: temp_dir.path().join("test.db").to_string_lossy().to_string(),
+            path: temp_dir
+                .path()
+                .join("test.db")
+                .to_string_lossy()
+                .to_string(),
             max_connections: 4,
             min_connections: 1,
             ..Default::default()
@@ -27,7 +31,9 @@ mod async_vector_tests {
             enable_approximate_search: false,
         };
 
-        let async_db = AsyncDatabase::new_with_vector(db_config, vector_config).await.unwrap();
+        let async_db = AsyncDatabase::new_with_vector(db_config, vector_config)
+            .await
+            .unwrap();
         let config = MindCacheConfig::default();
         let validator = RequestValidator::new(&config);
         let manager = AsyncMemoryManager::new(async_db, validator);
@@ -125,13 +131,19 @@ mod async_vector_tests {
             };
 
             let memory_id = manager.save_memory(memory).await.unwrap();
-            manager.store_embedding(&memory_id, embedding, "test_model").await.unwrap();
+            manager
+                .store_embedding(&memory_id, embedding, "test_model")
+                .await
+                .unwrap();
             memory_ids.push(memory_id);
         }
 
         // Test vector similarity search
         let query_embedding = vec![1.0, 0.1, 0.0, 0.0]; // Similar to cats
-        let results = manager.search_similar("vector_user", query_embedding, "test_model", Some(5)).await.unwrap();
+        let results = manager
+            .search_similar("vector_user", query_embedding, "test_model", Some(5))
+            .await
+            .unwrap();
 
         assert!(!results.is_empty());
         // First result should be most similar (cats)
@@ -154,21 +166,27 @@ mod async_vector_tests {
 
         let memory_id = manager.save_memory(memory).await.unwrap();
         let embedding = vec![0.8, 0.2, 0.1, 0.1]; // Fruit-like embedding
-        manager.store_embedding(&memory_id, embedding, "test_model").await.unwrap();
+        manager
+            .store_embedding(&memory_id, embedding, "test_model")
+            .await
+            .unwrap();
 
         // Test hybrid search
         let text_query = "apple";
         let vector_query = vec![0.7, 0.3, 0.1, 0.1]; // Similar to stored embedding
-        
-        let results = manager.hybrid_search(
-            "hybrid_user",
-            text_query,
-            vector_query,
-            "test_model",
-            0.5, // text weight
-            0.5, // vector weight
-            Some(5)
-        ).await.unwrap();
+
+        let results = manager
+            .hybrid_search(
+                "hybrid_user",
+                text_query,
+                vector_query,
+                "test_model",
+                0.5, // text weight
+                0.5, // vector weight
+                Some(5),
+            )
+            .await
+            .unwrap();
 
         assert!(!results.is_empty());
         assert!(results[0].content.contains("Apple"));
@@ -182,26 +200,35 @@ mod async_vector_tests {
         let (manager, _temp_dir) = setup_async_test_environment().await;
 
         // Test concurrent saves
-        let tasks: Vec<_> = (0..10).map(|i| {
-            let manager = manager.clone();
-            tokio::spawn(async move {
-                let memory = MemoryItem {
-                    user_id: format!("concurrent_user_{}", i % 3),
-                    session_id: "concurrent_session".to_string(),
-                    content: format!("Concurrent memory {}", i),
-                    importance: 0.5,
-                    ..Default::default()
-                };
-                manager.save_memory(memory).await
+        let tasks: Vec<_> = (0..10)
+            .map(|i| {
+                let manager = manager.clone();
+                tokio::spawn(async move {
+                    let memory = MemoryItem {
+                        user_id: format!("concurrent_user_{}", i % 3),
+                        session_id: "concurrent_session".to_string(),
+                        content: format!("Concurrent memory {}", i),
+                        importance: 0.5,
+                        ..Default::default()
+                    };
+                    manager.save_memory(memory).await
+                })
             })
-        }).collect();
+            .collect();
 
         // Wait for all tasks to complete
         let results = futures::future::join_all(tasks).await;
-        
+
         // Most should succeed
-        let success_count = results.iter().filter(|r| r.is_ok() && r.as_ref().unwrap().is_ok()).count();
-        assert!(success_count >= 8, "Expected at least 8 successful operations, got {}", success_count);
+        let success_count = results
+            .iter()
+            .filter(|r| r.is_ok() && r.as_ref().unwrap().is_ok())
+            .count();
+        assert!(
+            success_count >= 8,
+            "Expected at least 8 successful operations, got {}",
+            success_count
+        );
     }
 
     #[tokio::test]

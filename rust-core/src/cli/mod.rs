@@ -17,12 +17,12 @@ impl InteractiveCli {
         let default_char = if default { "Y/n" } else { "y/N" };
         print!("{} ({}): ", message, default_char);
         io::stdout().flush()?;
-        
+
         let mut input = String::new();
         io::stdin().read_line(&mut input)?;
-        
+
         let input = input.trim().to_lowercase();
-        
+
         match input.as_str() {
             "y" | "yes" => Ok(true),
             "n" | "no" => Ok(false),
@@ -33,7 +33,7 @@ impl InteractiveCli {
             }
         }
     }
-    
+
     /// Prompt for text input with optional default
     pub fn prompt_text(message: &str, default: Option<&str>) -> Result<String> {
         if let Some(def) = default {
@@ -42,10 +42,10 @@ impl InteractiveCli {
             print!("{}: ", message);
         }
         io::stdout().flush()?;
-        
+
         let mut input = String::new();
         io::stdin().read_line(&mut input)?;
-        
+
         let input = input.trim();
         if input.is_empty() {
             Ok(default.unwrap_or("").to_string())
@@ -53,42 +53,41 @@ impl InteractiveCli {
             Ok(input.to_string())
         }
     }
-    
+
     /// Prompt for number input
-    pub fn prompt_number<T>(message: &str, default: Option<T>) -> Result<T> 
+    pub fn prompt_number<T>(message: &str, default: Option<T>) -> Result<T>
     where
         T: std::str::FromStr + std::fmt::Display + Copy,
         T::Err: std::fmt::Debug,
     {
         let default_text = default.map(|d| d.to_string());
         let input = Self::prompt_text(message, default_text.as_deref())?;
-        
+
         if input.is_empty() && default.is_some() {
             Ok(default.unwrap())
         } else {
-            input.parse().map_err(|_| anyhow::anyhow!("Invalid number format"))
+            input
+                .parse()
+                .map_err(|_| anyhow::anyhow!("Invalid number format"))
         }
     }
-    
+
     /// Select from a list of options
-    pub fn select_from_list<T: std::fmt::Display>(
-        message: &str, 
-        options: &[T]
-    ) -> Result<usize> {
+    pub fn select_from_list<T: std::fmt::Display>(message: &str, options: &[T]) -> Result<usize> {
         println!("{}", message.bold());
         for (i, option) in options.iter().enumerate() {
             println!("  {}. {}", i + 1, option);
         }
-        
+
         let selection: usize = Self::prompt_number("Select option", None::<usize>)?;
-        
+
         if selection == 0 || selection > options.len() {
             return Err(anyhow::anyhow!("Invalid selection"));
         }
-        
+
         Ok(selection - 1)
     }
-    
+
     /// Show progress bar for long operations
     pub fn show_progress(current: usize, total: usize, message: &str) {
         let percentage = if total > 0 {
@@ -96,27 +95,33 @@ impl InteractiveCli {
         } else {
             0
         };
-        
+
         let bar_length = 50;
         let filled_length = (percentage * bar_length) / 100;
         let bar = "█".repeat(filled_length) + &"░".repeat(bar_length - filled_length);
-        
-        print!("\r{} [{}] {}% ({}/{})", 
-               message, bar.blue(), percentage, current, total);
+
+        print!(
+            "\r{} [{}] {}% ({}/{})",
+            message,
+            bar.blue(),
+            percentage,
+            current,
+            total
+        );
         io::stdout().flush().ok();
-        
+
         if current >= total {
             println!(); // New line when complete
         }
     }
-    
+
     /// Display a table of data
     pub fn display_table<T: TableRow>(title: &str, headers: &[&str], rows: &[T]) {
         println!("\n{}", title.green().bold());
-        
+
         // Calculate column widths
         let mut col_widths = headers.iter().map(|h| h.len()).collect::<Vec<_>>();
-        
+
         for row in rows {
             let row_data = row.to_row();
             for (i, cell) in row_data.iter().enumerate() {
@@ -125,7 +130,7 @@ impl InteractiveCli {
                 }
             }
         }
-        
+
         // Print header
         print!("┌");
         for (i, width) in col_widths.iter().enumerate() {
@@ -135,7 +140,7 @@ impl InteractiveCli {
             }
         }
         println!("┐");
-        
+
         print!("│");
         for (i, (header, width)) in headers.iter().zip(&col_widths).enumerate() {
             print!(" {:<width$} ", header.bold(), width = width);
@@ -144,7 +149,7 @@ impl InteractiveCli {
             }
         }
         println!("│");
-        
+
         // Print separator
         print!("├");
         for (i, width) in col_widths.iter().enumerate() {
@@ -154,7 +159,7 @@ impl InteractiveCli {
             }
         }
         println!("┤");
-        
+
         // Print rows
         for row in rows {
             let row_data = row.to_row();
@@ -167,7 +172,7 @@ impl InteractiveCli {
             }
             println!("│");
         }
-        
+
         // Print footer
         print!("└");
         for (i, width) in col_widths.iter().enumerate() {
@@ -206,7 +211,10 @@ impl TableRow for Session {
     fn to_row(&self) -> Vec<String> {
         vec![
             self.id[..8].to_string(), // Truncated ID
-            self.name.as_ref().unwrap_or(&"(unnamed)".to_string()).clone(),
+            self.name
+                .as_ref()
+                .unwrap_or(&"(unnamed)".to_string())
+                .clone(),
             self.memory_count.to_string(),
             self.last_active.format("%Y-%m-%d %H:%M").to_string(),
         ]
@@ -218,12 +226,12 @@ pub fn format_bytes(bytes: u64) -> String {
     const UNITS: &[&str] = &["B", "KB", "MB", "GB", "TB"];
     let mut size = bytes as f64;
     let mut unit_index = 0;
-    
+
     while size >= 1024.0 && unit_index < UNITS.len() - 1 {
         size /= 1024.0;
         unit_index += 1;
     }
-    
+
     if unit_index == 0 {
         format!("{} {}", size as u64, UNITS[unit_index])
     } else {
@@ -272,7 +280,7 @@ pub fn colorize_count(count: usize, high_threshold: usize) -> colored::ColoredSt
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_format_bytes() {
         assert_eq!(format_bytes(512), "512 B");
@@ -281,7 +289,7 @@ mod tests {
         assert_eq!(format_bytes(1024 * 1024), "1.0 MB");
         assert_eq!(format_bytes(1024 * 1024 * 1024), "1.0 GB");
     }
-    
+
     #[test]
     fn test_format_duration() {
         assert_eq!(format_duration(30), "30s");

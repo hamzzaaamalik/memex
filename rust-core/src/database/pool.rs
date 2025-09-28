@@ -24,7 +24,7 @@ impl ConnectionPool {
                 .with_context(|| format!("Failed to create database directory: {:?}", parent))?;
         }
 
-        let flags = OpenFlags::SQLITE_OPEN_READ_WRITE 
+        let flags = OpenFlags::SQLITE_OPEN_READ_WRITE
             | OpenFlags::SQLITE_OPEN_CREATE
             | OpenFlags::SQLITE_OPEN_NO_MUTEX;
 
@@ -61,14 +61,18 @@ impl ConnectionPool {
             .build(manager)
             .context("Failed to create connection pool")?;
 
-        log::info!("Database connection pool created: {} max connections", config.max_connections);
+        log::info!(
+            "Database connection pool created: {} max connections",
+            config.max_connections
+        );
 
         Ok(Self { pool, config })
     }
 
     /// Get a connection from the pool
     pub fn get_connection(&self) -> Result<PooledConnection<SqliteConnectionManager>> {
-        self.pool.get()
+        self.pool
+            .get()
             .context("Failed to get connection from pool")
             .map_err(|e| {
                 log::error!("Connection pool error: {}", e);
@@ -102,7 +106,12 @@ impl ConnectionPool {
             match f(&*conn) {
                 Ok(result) => return Ok(result),
                 Err(e) if attempts < max_attempts => {
-                    log::warn!("Read query failed, retrying (attempt {}/{}): {}", attempts, max_attempts, e);
+                    log::warn!(
+                        "Read query failed, retrying (attempt {}/{}): {}",
+                        attempts,
+                        max_attempts,
+                        e
+                    );
                     std::thread::sleep(Duration::from_millis(100 * attempts as u64));
                     continue;
                 }
@@ -127,17 +136,15 @@ impl ConnectionPool {
             match tx_result {
                 Ok(tx) => {
                     match f(&tx) {
-                        Ok(result) => {
-                            match tx.commit() {
-                                Ok(()) => return Ok(result),
-                                Err(e) if attempts < max_attempts => {
-                                    log::warn!("Transaction commit failed, retrying: {}", e);
-                                    std::thread::sleep(Duration::from_millis(100 * attempts as u64));
-                                    continue;
-                                }
-                                Err(e) => return Err(e.into()),
+                        Ok(result) => match tx.commit() {
+                            Ok(()) => return Ok(result),
+                            Err(e) if attempts < max_attempts => {
+                                log::warn!("Transaction commit failed, retrying: {}", e);
+                                std::thread::sleep(Duration::from_millis(100 * attempts as u64));
+                                continue;
                             }
-                        }
+                            Err(e) => return Err(e.into()),
+                        },
                         Err(e) => {
                             let _ = tx.rollback(); // Ignore rollback errors
                             if attempts < max_attempts {
@@ -171,7 +178,7 @@ impl Clone for ConnectionPool {
 }
 
 /// Pool status information
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PoolStatus {
     pub connections: u32,
     pub idle_connections: u32,
@@ -201,7 +208,11 @@ mod tests {
     fn test_config() -> (DatabaseConfig, TempDir) {
         let temp_dir = TempDir::new().unwrap();
         let config = DatabaseConfig {
-            path: temp_dir.path().join("test.db").to_string_lossy().to_string(),
+            path: temp_dir
+                .path()
+                .join("test.db")
+                .to_string_lossy()
+                .to_string(),
             max_connections: 5,
             min_connections: 1,
             ..Default::default()
@@ -213,7 +224,7 @@ mod tests {
     fn test_pool_creation() {
         let (config, _temp_dir) = test_config();
         let pool = ConnectionPool::new(config).unwrap();
-        
+
         let status = pool.status();
         assert!(status.max_connections > 0);
         assert!(status.is_healthy());
@@ -223,11 +234,12 @@ mod tests {
     fn test_read_connection() {
         let (config, _temp_dir) = test_config();
         let pool = ConnectionPool::new(config).unwrap();
-        
+
         let result = pool.with_read_connection(|conn| {
-            conn.execute("CREATE TABLE test (id INTEGER)", []).map_err(|e| anyhow::anyhow!(e))
+            conn.execute("CREATE TABLE test (id INTEGER)", [])
+                .map_err(|e| anyhow::anyhow!(e))
         });
-        
+
         assert!(result.is_ok());
     }
 
@@ -235,29 +247,31 @@ mod tests {
     fn test_write_transaction() {
         let (config, _temp_dir) = test_config();
         let pool = ConnectionPool::new(config).unwrap();
-        
+
         // Create table first
         pool.with_write_transaction(|tx| {
             tx.execute("CREATE TABLE test (id INTEGER, value TEXT)", [])?;
             Ok(())
-        }).unwrap();
-        
+        })
+        .unwrap();
+
         // Test transaction
         let result = pool.with_write_transaction(|tx| {
             tx.execute("INSERT INTO test (id, value) VALUES (1, 'test')", [])?;
             tx.execute("INSERT INTO test (id, value) VALUES (2, 'test2')", [])?;
             Ok(42)
         });
-        
+
         assert_eq!(result.unwrap(), 42);
-        
+
         // Verify data was committed
-        let count: i64 = pool.with_read_connection(|conn| {
-            conn.query_row("SELECT COUNT(*) FROM test", [], |row| {
-                Ok(row.get(0)?)
-            }).map_err(|e| anyhow::anyhow!(e))
-        }).unwrap();
-        
+        let count: i64 = pool
+            .with_read_connection(|conn| {
+                conn.query_row("SELECT COUNT(*) FROM test", [], |row| Ok(row.get(0)?))
+                    .map_err(|e| anyhow::anyhow!(e))
+            })
+            .unwrap();
+
         assert_eq!(count, 2);
     }
 
@@ -265,39 +279,48 @@ mod tests {
     fn test_concurrent_access() {
         let (config, _temp_dir) = test_config();
         let pool = ConnectionPool::new(config).unwrap();
-        
+
         // Create table
         pool.with_write_transaction(|tx| {
-            tx.execute("CREATE TABLE concurrent_test (id INTEGER, thread_id INTEGER)", [])?;
+            tx.execute(
+                "CREATE TABLE concurrent_test (id INTEGER, thread_id INTEGER)",
+                [],
+            )?;
             Ok(())
-        }).unwrap();
-        
+        })
+        .unwrap();
+
         // Spawn multiple threads
-        let handles: Vec<_> = (0..10).map(|i| {
-            let pool = pool.clone();
-            std::thread::spawn(move || {
-                pool.with_write_transaction(|tx| {
-                    tx.execute(
-                        "INSERT INTO concurrent_test (id, thread_id) VALUES (?1, ?2)", 
-                        [i, i * 100]
-                    )?;
-                    Ok(())
+        let handles: Vec<_> = (0..10)
+            .map(|i| {
+                let pool = pool.clone();
+                std::thread::spawn(move || {
+                    pool.with_write_transaction(|tx| {
+                        tx.execute(
+                            "INSERT INTO concurrent_test (id, thread_id) VALUES (?1, ?2)",
+                            [i, i * 100],
+                        )?;
+                        Ok(())
+                    })
                 })
             })
-        }).collect();
-        
+            .collect();
+
         // Wait for all threads
         for handle in handles {
             handle.join().unwrap().unwrap();
         }
-        
+
         // Verify all inserts succeeded
-        let count: i64 = pool.with_read_connection(|conn| {
-            conn.query_row("SELECT COUNT(*) FROM concurrent_test", [], |row| {
-                Ok(row.get(0)?)
-            }).map_err(|e| anyhow::anyhow!(e))
-        }).unwrap();
-        
+        let count: i64 = pool
+            .with_read_connection(|conn| {
+                conn.query_row("SELECT COUNT(*) FROM concurrent_test", [], |row| {
+                    Ok(row.get(0)?)
+                })
+                .map_err(|e| anyhow::anyhow!(e))
+            })
+            .unwrap();
+
         assert_eq!(count, 10);
     }
 }

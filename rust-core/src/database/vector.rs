@@ -67,14 +67,19 @@ impl VectorSearchEngine {
             tx.create_scalar_function(
                 "cosine_similarity",
                 2,
-                rusqlite::functions::FunctionFlags::SQLITE_UTF8 | rusqlite::functions::FunctionFlags::SQLITE_DETERMINISTIC,
+                rusqlite::functions::FunctionFlags::SQLITE_UTF8
+                    | rusqlite::functions::FunctionFlags::SQLITE_DETERMINISTIC,
                 move |ctx| {
                     let blob1 = ctx.get::<Vec<u8>>(0)?;
                     let blob2 = ctx.get::<Vec<u8>>(1)?;
-                    
-                    let vec1 = deserialize_vector(&blob1).map_err(|_| rusqlite::Error::UserFunctionError("Invalid vector 1".into()))?;
-                    let vec2 = deserialize_vector(&blob2).map_err(|_| rusqlite::Error::UserFunctionError("Invalid vector 2".into()))?;
-                    
+
+                    let vec1 = deserialize_vector(&blob1).map_err(|_| {
+                        rusqlite::Error::UserFunctionError("Invalid vector 1".into())
+                    })?;
+                    let vec2 = deserialize_vector(&blob2).map_err(|_| {
+                        rusqlite::Error::UserFunctionError("Invalid vector 2".into())
+                    })?;
+
                     let similarity = cosine_similarity(&vec1, &vec2);
                     Ok(similarity)
                 },
@@ -85,7 +90,12 @@ impl VectorSearchEngine {
     }
 
     /// Store embedding for a memory
-    pub fn store_embedding(&self, memory_id: &str, embedding: &[f32], model_name: &str) -> Result<()> {
+    pub fn store_embedding(
+        &self,
+        memory_id: &str,
+        embedding: &[f32],
+        model_name: &str,
+    ) -> Result<()> {
         if embedding.len() != self.config.dimension {
             return Err(anyhow::anyhow!(
                 "Embedding dimension {} doesn't match configured dimension {}",
@@ -110,7 +120,12 @@ impl VectorSearchEngine {
     }
 
     /// Search for similar memories using vector similarity
-    pub fn search_similar(&self, query_embedding: &[f32], model_name: &str, limit: Option<usize>) -> Result<Vec<VectorSearchResult>> {
+    pub fn search_similar(
+        &self,
+        query_embedding: &[f32],
+        model_name: &str,
+        limit: Option<usize>,
+    ) -> Result<Vec<VectorSearchResult>> {
         if query_embedding.len() != self.config.dimension {
             return Err(anyhow::anyhow!(
                 "Query embedding dimension {} doesn't match configured dimension {}",
@@ -120,7 +135,9 @@ impl VectorSearchEngine {
         }
 
         let query_blob = serialize_vector(query_embedding)?;
-        let limit = limit.unwrap_or(self.config.max_results).min(self.config.max_results);
+        let limit = limit
+            .unwrap_or(self.config.max_results)
+            .min(self.config.max_results);
 
         self.pool.with_read_connection(|conn| {
             let mut stmt = conn.prepare(
@@ -136,11 +153,16 @@ impl VectorSearchEngine {
                     AND cosine_similarity(e.embedding, ?1) >= ?3
                 ORDER BY similarity DESC
                 LIMIT ?4
-                "#
+                "#,
             )?;
 
             let results = stmt.query_map(
-                rusqlite::params![query_blob, model_name, self.config.similarity_threshold, limit],
+                rusqlite::params![
+                    query_blob,
+                    model_name,
+                    self.config.similarity_threshold,
+                    limit
+                ],
                 |row| {
                     Ok(VectorSearchResult {
                         memory_id: row.get("id")?,
@@ -151,7 +173,7 @@ impl VectorSearchEngine {
                         similarity: row.get("similarity")?,
                         created_at: row.get("created_at")?,
                     })
-                }
+                },
             )?;
 
             let mut search_results = Vec::new();
@@ -164,8 +186,18 @@ impl VectorSearchEngine {
     }
 
     /// Hybrid search combining text and vector search
-    pub fn hybrid_search(&self, text_query: &str, vector_query: &[f32], model_name: &str, text_weight: f32, vector_weight: f32, limit: Option<usize>) -> Result<Vec<HybridSearchResult>> {
-        let limit = limit.unwrap_or(self.config.max_results).min(self.config.max_results);
+    pub fn hybrid_search(
+        &self,
+        text_query: &str,
+        vector_query: &[f32],
+        model_name: &str,
+        text_weight: f32,
+        vector_weight: f32,
+        limit: Option<usize>,
+    ) -> Result<Vec<HybridSearchResult>> {
+        let limit = limit
+            .unwrap_or(self.config.max_results)
+            .min(self.config.max_results);
         let query_blob = serialize_vector(vector_query)?;
 
         self.pool.with_read_connection(|conn| {
@@ -190,18 +222,19 @@ impl VectorSearchEngine {
                          ?3 * cosine_similarity(e.embedding, ?1)) >= ?6
                 ORDER BY combined_score DESC
                 LIMIT ?7
-                "#
+                "#,
             )?;
 
-            let min_combined_score = text_weight * 0.5 + vector_weight * self.config.similarity_threshold;
+            let min_combined_score =
+                text_weight * 0.5 + vector_weight * self.config.similarity_threshold;
 
             let results = stmt.query_map(
                 rusqlite::params![
-                    query_blob, 
-                    text_weight, 
-                    vector_weight, 
-                    text_query, 
-                    model_name, 
+                    query_blob,
+                    text_weight,
+                    vector_weight,
+                    text_query,
+                    model_name,
                     min_combined_score,
                     limit
                 ],
@@ -217,7 +250,7 @@ impl VectorSearchEngine {
                         combined_score: row.get("combined_score")?,
                         created_at: row.get("created_at")?,
                     })
-                }
+                },
             )?;
 
             let mut search_results = Vec::new();
@@ -233,13 +266,14 @@ impl VectorSearchEngine {
     pub fn get_embedding(&self, memory_id: &str, model_name: &str) -> Result<Option<Vec<f32>>> {
         self.pool.with_read_connection(|conn| {
             let mut stmt = conn.prepare(
-                "SELECT embedding FROM memory_embeddings WHERE memory_id = ?1 AND model_name = ?2"
+                "SELECT embedding FROM memory_embeddings WHERE memory_id = ?1 AND model_name = ?2",
             )?;
 
-            let embedding_blob: Option<Vec<u8>> = stmt.query_row(
-                rusqlite::params![memory_id, model_name],
-                |row| Ok(row.get("embedding")?)
-            ).optional()?;
+            let embedding_blob: Option<Vec<u8>> = stmt
+                .query_row(rusqlite::params![memory_id, model_name], |row| {
+                    Ok(row.get("embedding")?)
+                })
+                .optional()?;
 
             match embedding_blob {
                 Some(blob) => {
@@ -265,14 +299,13 @@ impl VectorSearchEngine {
     /// Get vector search statistics
     pub fn get_vector_stats(&self) -> Result<VectorStats> {
         self.pool.with_read_connection(|conn| {
-            let total_embeddings: i64 = conn.query_row(
-                "SELECT COUNT(*) FROM memory_embeddings",
-                [],
-                |row| Ok(row.get(0)?)
-            )?;
+            let total_embeddings: i64 =
+                conn.query_row("SELECT COUNT(*) FROM memory_embeddings", [], |row| {
+                    Ok(row.get(0)?)
+                })?;
 
             let mut stmt = conn.prepare(
-                "SELECT model_name, COUNT(*) FROM memory_embeddings GROUP BY model_name"
+                "SELECT model_name, COUNT(*) FROM memory_embeddings GROUP BY model_name",
             )?;
 
             let model_counts = stmt.query_map([], |row| {
@@ -376,7 +409,11 @@ mod tests {
     fn setup_vector_engine() -> (VectorSearchEngine, TempDir) {
         let temp_dir = TempDir::new().unwrap();
         let config = super::super::DatabaseConfig {
-            path: temp_dir.path().join("test.db").to_string_lossy().to_string(),
+            path: temp_dir
+                .path()
+                .join("test.db")
+                .to_string_lossy()
+                .to_string(),
             max_connections: 2,
             min_connections: 1,
             ..Default::default()
@@ -401,7 +438,7 @@ mod tests {
         let vector = vec![1.0, -0.5, 0.25, 0.0];
         let bytes = serialize_vector(&vector).unwrap();
         let deserialized = deserialize_vector(&bytes).unwrap();
-        
+
         assert_eq!(vector, deserialized);
     }
 
@@ -413,7 +450,7 @@ mod tests {
 
         assert_eq!(cosine_similarity(&a, &b), 0.0); // Orthogonal vectors
         assert_eq!(cosine_similarity(&a, &c), 1.0); // Identical vectors
-        
+
         let d = vec![1.0, 1.0, 0.0];
         let similarity = cosine_similarity(&a, &d);
         assert!((similarity - 0.7071067).abs() < 0.0001); // 1/sqrt(2)
@@ -428,7 +465,9 @@ mod tests {
         let model_name = "test_model";
 
         // Store embedding
-        engine.store_embedding(memory_id, &embedding, model_name).unwrap();
+        engine
+            .store_embedding(memory_id, &embedding, model_name)
+            .unwrap();
 
         // Retrieve embedding
         let retrieved = engine.get_embedding(memory_id, model_name).unwrap();
@@ -444,9 +483,15 @@ mod tests {
         let (engine, _temp_dir) = setup_vector_engine();
 
         // Add some embeddings
-        engine.store_embedding("mem1", &vec![0.1, 0.2, 0.3, 0.4], "model1").unwrap();
-        engine.store_embedding("mem2", &vec![0.5, 0.6, 0.7, 0.8], "model1").unwrap();
-        engine.store_embedding("mem3", &vec![0.9, 1.0, 1.1, 1.2], "model2").unwrap();
+        engine
+            .store_embedding("mem1", &vec![0.1, 0.2, 0.3, 0.4], "model1")
+            .unwrap();
+        engine
+            .store_embedding("mem2", &vec![0.5, 0.6, 0.7, 0.8], "model1")
+            .unwrap();
+        engine
+            .store_embedding("mem3", &vec![0.9, 1.0, 1.1, 1.2], "model2")
+            .unwrap();
 
         let stats = engine.get_vector_stats().unwrap();
         assert_eq!(stats.total_embeddings, 3);

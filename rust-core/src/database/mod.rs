@@ -1,25 +1,25 @@
 //! Database module for MindCache
-//! 
+//!
 //! Provides SQLite-based storage with FTS5 full-text search capabilities.
 pub mod models;
-pub mod schema;
 pub mod pool;
+pub mod schema;
 pub mod simple_db;
 
 #[cfg(feature = "vector-search")]
 pub mod vector;
 
 #[cfg(feature = "async")]
-pub mod async_db; 
+pub mod async_db;
 
 use anyhow::{Context, Result};
 use chrono::Utc;
+use rusqlite::OptionalExtension;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
-use rusqlite::OptionalExtension;
 
-use crate::database::models::{MemoryItem, QueryFilter, PaginatedResponse};
+use crate::database::models::{MemoryItem, PaginatedResponse, QueryFilter};
 use crate::database::pool::ConnectionPool;
 
 /// Database configuration with connection pooling support
@@ -41,7 +41,7 @@ impl Default for DatabaseConfig {
         Self {
             path: "mindcache.db".to_string(),
             enable_wal: true,
-            cache_size: -64000, // 64MB cache
+            cache_size: -64000,  // 64MB cache
             busy_timeout: 30000, // 30 seconds
             synchronous: "NORMAL".to_string(),
             max_connections: 10,
@@ -65,7 +65,7 @@ impl Database {
     pub fn new(config: DatabaseConfig) -> Result<Self> {
         // Create write pool (primary database)
         let write_pool = ConnectionPool::new(config.clone())?;
-        
+
         // Initialize schema on primary database
         write_pool.with_write_transaction(|tx| {
             tx.execute_batch(schema::SCHEMA_SQL)
@@ -83,23 +83,26 @@ impl Database {
             for replica_path in &config.read_replica_paths {
                 let mut replica_config = config.clone();
                 replica_config.path = replica_path.clone();
-                
+
                 // Read replicas can have different connection settings
                 replica_config.max_connections = config.max_connections / 2; // Fewer connections for replicas
-                
+
                 let replica_pool = ConnectionPool::new(replica_config)?;
                 read_pools.push(replica_pool);
-                
+
                 log::info!("Initialized read replica: {}", replica_path);
             }
         }
-        
+
         // If no read replicas, use write pool for reads too
         if read_pools.is_empty() {
             read_pools.push(write_pool.clone());
         }
 
-        log::info!("Database initialized successfully with {} read pools", read_pools.len());
+        log::info!(
+            "Database initialized successfully with {} read pools",
+            read_pools.len()
+        );
 
         Ok(Self {
             write_pool,
@@ -114,7 +117,9 @@ impl Database {
         if self.read_pools.len() == 1 {
             &self.read_pools[0]
         } else {
-            let index = self.read_replica_index.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            let index = self
+                .read_replica_index
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             &self.read_pools[index % self.read_pools.len()]
         }
     }
@@ -122,8 +127,7 @@ impl Database {
     /// Save a memory item (write operation)
     pub fn save_memory(&self, memory: &MemoryItem) -> Result<String> {
         // Validate input
-        memory.validate()
-            .context("Memory validation failed")?;
+        memory.validate().context("Memory validation failed")?;
 
         let id = if memory.id.is_empty() {
             Uuid::new_v4().to_string()
@@ -132,7 +136,9 @@ impl Database {
         };
 
         let now = Utc::now();
-        let expires_at = memory.ttl_hours.map(|ttl| now + chrono::Duration::hours(ttl as i64));
+        let expires_at = memory
+            .ttl_hours
+            .map(|ttl| now + chrono::Duration::hours(ttl as i64));
 
         self.write_pool.with_write_transaction(|tx| {
             // Insert into memories table
@@ -183,29 +189,33 @@ impl Database {
     /// Recall memories with pagination and filtering (read operation)
     pub fn recall_memories(&self, filter: &QueryFilter) -> Result<PaginatedResponse<MemoryItem>> {
         // Validate filter
-        filter.validate()
-            .context("Filter validation failed")?;
+        filter.validate().context("Filter validation failed")?;
 
         let read_pool = self.get_read_pool();
-        
+
         read_pool.with_read_connection(|conn| {
             let (query, count_query, params) = self.build_recall_query(filter)?;
 
             // Get total count
             let total_count: i64 = {
                 let mut stmt = conn.prepare(&count_query)?;
-                let params_refs: Vec<&dyn rusqlite::ToSql> = params.iter().map(|p| p.as_ref()).collect();
+                let params_refs: Vec<&dyn rusqlite::ToSql> =
+                    params.iter().map(|p| p.as_ref()).collect();
                 stmt.query_row(&params_refs[..], |row| Ok(row.get(0)?))?
             };
 
             // Calculate pagination info
-            let page = filter.offset.map(|o| o / filter.limit.unwrap_or(50)).unwrap_or(0);
+            let page = filter
+                .offset
+                .map(|o| o / filter.limit.unwrap_or(50))
+                .unwrap_or(0);
             let per_page = filter.limit.unwrap_or(50);
             let total_pages = ((total_count as f64) / (per_page as f64)).ceil() as usize;
 
             // Execute main query
             let mut stmt = conn.prepare(&query)?;
-            let params_refs: Vec<&dyn rusqlite::ToSql> = params.iter().map(|p| p.as_ref()).collect();
+            let params_refs: Vec<&dyn rusqlite::ToSql> =
+                params.iter().map(|p| p.as_ref()).collect();
             let memory_iter = stmt.query_map(&params_refs[..], |row| {
                 Ok(MemoryItem {
                     id: row.get("id")?,
@@ -213,14 +223,22 @@ impl Database {
                     session_id: row.get("session_id")?,
                     content: row.get("content")?,
                     content_vector: row.get("content_vector")?,
-                    metadata: serde_json::from_str(&row.get::<_, String>("metadata")?).unwrap_or_default(),
+                    #[cfg(feature = "vector-search")]
+                    embedding: None,
+                    #[cfg(feature = "vector-search")]
+                    embedding_model: None,
+                    metadata: serde_json::from_str(&row.get::<_, String>("metadata")?)
+                        .unwrap_or_default(),
                     created_at: row.get("created_at")?,
                     updated_at: row.get("updated_at")?,
                     expires_at: row.get("expires_at")?,
                     importance: row.get("importance")?,
                     ttl_hours: row.get("ttl_hours")?,
                     is_compressed: row.get("is_compressed")?,
-                    compressed_from: serde_json::from_str(&row.get::<_, String>("compressed_from")?).unwrap_or_default(),
+                    compressed_from: serde_json::from_str(
+                        &row.get::<_, String>("compressed_from")?,
+                    )
+                    .unwrap_or_default(),
                 })
             })?;
 
@@ -242,7 +260,10 @@ impl Database {
     }
 
     /// Build SQL query for recall with filters (helper method)
-    fn build_recall_query(&self, filter: &QueryFilter) -> Result<(String, String, Vec<Box<dyn rusqlite::ToSql>>)> {
+    fn build_recall_query(
+        &self,
+        filter: &QueryFilter,
+    ) -> Result<(String, String, Vec<Box<dyn rusqlite::ToSql>>)> {
         let mut conditions = Vec::new();
         let mut params: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
         let mut param_index = 1;
@@ -331,10 +352,7 @@ impl Database {
         }
 
         // Count query
-        let count_query = format!(
-            "SELECT COUNT(*) FROM {} {}",
-            base_table, where_clause
-        );
+        let count_query = format!("SELECT COUNT(*) FROM {} {}", base_table, where_clause);
 
         Ok((query, count_query, params))
     }
@@ -342,7 +360,7 @@ impl Database {
     /// Get a memory by ID (read operation)
     pub fn get_memory(&self, id: &str) -> Result<Option<MemoryItem>> {
         let read_pool = self.get_read_pool();
-        
+
         read_pool.with_read_connection(|conn| {
             let mut stmt = conn.prepare(
                 r#"
@@ -351,26 +369,36 @@ impl Database {
                        is_compressed, compressed_from
                 FROM memories
                 WHERE id = ?1 AND (expires_at IS NULL OR expires_at > datetime('now'))
-                "#
+                "#,
             )?;
 
-            let memory = stmt.query_row(rusqlite::params![id], |row| {
-                Ok(MemoryItem {
-                    id: row.get("id")?,
-                    user_id: row.get("user_id")?,
-                    session_id: row.get("session_id")?,
-                    content: row.get("content")?,
-                    content_vector: row.get("content_vector")?,
-                    metadata: serde_json::from_str(&row.get::<_, String>("metadata")?).unwrap_or_default(),
-                    created_at: row.get("created_at")?,
-                    updated_at: row.get("updated_at")?,
-                    expires_at: row.get("expires_at")?,
-                    importance: row.get("importance")?,
-                    ttl_hours: row.get("ttl_hours")?,
-                    is_compressed: row.get("is_compressed")?,
-                    compressed_from: serde_json::from_str(&row.get::<_, String>("compressed_from")?).unwrap_or_default(),
+            let memory = stmt
+                .query_row(rusqlite::params![id], |row| {
+                    Ok(MemoryItem {
+                        id: row.get("id")?,
+                        user_id: row.get("user_id")?,
+                        session_id: row.get("session_id")?,
+                        content: row.get("content")?,
+                        content_vector: row.get("content_vector")?,
+                        #[cfg(feature = "vector-search")]
+                        embedding: None,
+                        #[cfg(feature = "vector-search")]
+                        embedding_model: None,
+                        metadata: serde_json::from_str(&row.get::<_, String>("metadata")?)
+                            .unwrap_or_default(),
+                        created_at: row.get("created_at")?,
+                        updated_at: row.get("updated_at")?,
+                        expires_at: row.get("expires_at")?,
+                        importance: row.get("importance")?,
+                        ttl_hours: row.get("ttl_hours")?,
+                        is_compressed: row.get("is_compressed")?,
+                        compressed_from: serde_json::from_str(
+                            &row.get::<_, String>("compressed_from")?,
+                        )
+                        .unwrap_or_default(),
+                    })
                 })
-            }).optional()?;
+                .optional()?;
 
             Ok(memory)
         })
@@ -386,7 +414,8 @@ impl Database {
             )?;
 
             // Delete from main table
-            let rows_affected = tx.execute("DELETE FROM memories WHERE id = ?1", rusqlite::params![id])?;
+            let rows_affected =
+                tx.execute("DELETE FROM memories WHERE id = ?1", rusqlite::params![id])?;
 
             Ok(rows_affected > 0)
         })
@@ -415,7 +444,7 @@ impl Database {
     /// Get database statistics (read operation)
     pub fn get_stats(&self) -> Result<serde_json::Value> {
         let read_pool = self.get_read_pool();
-        
+
         read_pool.with_read_connection(|conn| {
             // Total memories
             let total_memories: i64 = conn.query_row(
@@ -496,15 +525,20 @@ impl Database {
     }
 
     /// Get sessions for a user with pagination (read operation)
-    pub fn get_user_sessions(&self, user_id: &str, limit: Option<usize>, offset: Option<usize>) -> Result<PaginatedResponse<models::Session>> {
+    pub fn get_user_sessions(
+        &self,
+        user_id: &str,
+        limit: Option<usize>,
+        offset: Option<usize>,
+    ) -> Result<PaginatedResponse<models::Session>> {
         let read_pool = self.get_read_pool();
-        
+
         read_pool.with_read_connection(|conn| {
             // Get total count
             let total_count: i64 = conn.query_row(
                 "SELECT COUNT(*) FROM sessions WHERE user_id = ?1",
                 rusqlite::params![user_id],
-                |row| Ok(row.get(0)?)
+                |row| Ok(row.get(0)?),
             )?;
 
             // Calculate pagination
@@ -527,7 +561,7 @@ impl Database {
                 WHERE s.user_id = ?1
                 ORDER BY s.last_active DESC
                 LIMIT ?2 OFFSET ?3
-                "#
+                "#,
             )?;
 
             let session_iter = stmt.query_map(
@@ -543,7 +577,7 @@ impl Database {
                         tags: Vec::new(), // TODO: Implement tags
                         metadata: std::collections::HashMap::new(), // TODO: Implement metadata
                     })
-                }
+                },
             )?;
 
             let mut sessions = Vec::new();
@@ -589,7 +623,7 @@ impl Clone for Database {
 }
 
 /// Database pool status for monitoring
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct DatabasePoolStatus {
     pub write_pool: pool::PoolStatus,
     pub read_pools: Vec<pool::PoolStatus>,
@@ -602,11 +636,9 @@ impl DatabasePoolStatus {
 
     pub fn overall_utilization(&self) -> f32 {
         let total_pools = 1 + self.read_pools.len();
-        let total_utilization = self.write_pool.utilization() + 
-            self.read_pools.iter().map(|p| p.utilization()).sum::<f32>();
-        
+        let total_utilization = self.write_pool.utilization()
+            + self.read_pools.iter().map(|p| p.utilization()).sum::<f32>();
+
         total_utilization / total_pools as f32
     }
 }
-
-

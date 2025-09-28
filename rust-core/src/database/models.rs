@@ -78,13 +78,13 @@ pub struct QueryFilter {
     pub keywords: Option<Vec<String>>,
     pub date_from: Option<DateTime<Utc>>,
     pub date_to: Option<DateTime<Utc>>,
-    
+
     #[validate(range(min = 1, max = 1000))]
     pub limit: Option<usize>,
-    
+
     #[validate(range(min = 0, max = 1000000))]
     pub offset: Option<usize>,
-    
+
     #[validate(range(min = 0.0, max = 1.0))]
     pub min_importance: Option<f32>,
 }
@@ -128,11 +128,11 @@ impl<T> PaginatedResponse<T> {
             has_prev: false,
         }
     }
-    
+
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
-    
+
     pub fn len(&self) -> usize {
         self.data.len()
     }
@@ -185,13 +185,13 @@ pub struct CompressedMemory {
 pub struct DecayPolicy {
     #[validate(range(min = 1, max = 8760))] // 1 hour to 1 year
     pub max_age_hours: u32,
-    
+
     #[validate(range(min = 0.0, max = 1.0))]
     pub importance_threshold: f32,
-    
+
     #[validate(range(min = 1, max = 1000000))]
     pub max_memories_per_user: usize,
-    
+
     pub compression_enabled: bool,
     pub auto_summarize_sessions: bool,
 }
@@ -243,7 +243,7 @@ impl std::fmt::Display for DecayStatus {
 
 impl std::str::FromStr for DecayStatus {
     type Err = &'static str;
-    
+
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "running" => Ok(DecayStatus::Running),
@@ -295,25 +295,24 @@ impl MemoryItem {
         if self.content.trim().is_empty() {
             return Err(ValidationError::new("content_empty"));
         }
-        
+
         // Check metadata size (prevent abuse)
-        let metadata_size: usize = self.metadata.iter()
-            .map(|(k, v)| k.len() + v.len())
-            .sum();
-        
-        if metadata_size > 10000 { // 10KB max metadata
+        let metadata_size: usize = self.metadata.iter().map(|(k, v)| k.len() + v.len()).sum();
+
+        if metadata_size > 10000 {
+            // 10KB max metadata
             return Err(ValidationError::new("metadata_too_large"));
         }
-        
+
         // Validate compressed_from consistency
         if self.is_compressed && self.compressed_from.is_empty() {
             return Err(ValidationError::new("compressed_without_originals"));
         }
-        
+
         if !self.is_compressed && !self.compressed_from.is_empty() {
             return Err(ValidationError::new("not_compressed_with_originals"));
         }
-        
+
         Ok(())
     }
 }
@@ -323,11 +322,15 @@ impl QueryFilter {
     pub fn for_user_with_keywords(user_id: &str, keywords: Vec<String>) -> Self {
         Self {
             user_id: Some(user_id.to_string()),
-            keywords: if keywords.is_empty() { None } else { Some(keywords) },
+            keywords: if keywords.is_empty() {
+                None
+            } else {
+                Some(keywords)
+            },
             ..Default::default()
         }
     }
-    
+
     /// Create a filter for a specific session
     pub fn for_session(user_id: &str, session_id: &str) -> Self {
         Self {
@@ -336,7 +339,7 @@ impl QueryFilter {
             ..Default::default()
         }
     }
-    
+
     /// Create a filter for high-importance memories
     pub fn high_importance(user_id: &str, threshold: f32) -> Self {
         Self {
@@ -345,7 +348,7 @@ impl QueryFilter {
             ..Default::default()
         }
     }
-    
+
     /// Create a filter with date range
     pub fn date_range(user_id: &str, from: DateTime<Utc>, to: DateTime<Utc>) -> Self {
         Self {
@@ -361,7 +364,7 @@ impl QueryFilter {
 mod tests {
     use super::*;
     use chrono::Utc;
-    
+
     #[test]
     fn test_memory_item_validation() {
         let mut memory = MemoryItem {
@@ -370,55 +373,58 @@ mod tests {
             content: "Valid content".to_string(),
             ..Default::default()
         };
-        
+
         // Should validate successfully
         assert!(memory.validate().is_ok());
         assert!(memory.validate_custom().is_ok());
-        
+
         // Test empty content
         memory.content = "   ".to_string();
         assert!(memory.validate_custom().is_err());
-        
+
         // Test invalid importance
         memory.content = "Valid content".to_string();
         memory.importance = 1.5;
         assert!(memory.validate().is_err());
-        
+
         // Test compressed without originals
         memory.importance = 0.8;
         memory.is_compressed = true;
         assert!(memory.validate_custom().is_err());
-        
+
         // Fix compressed memory
         memory.compressed_from = vec!["mem1".to_string(), "mem2".to_string()];
         assert!(memory.validate_custom().is_ok());
     }
-    
+
     #[test]
     fn test_query_filter_helpers() {
         let filter = QueryFilter::for_user_with_keywords(
-            "user123", 
-            vec!["trading".to_string(), "stocks".to_string()]
+            "user123",
+            vec!["trading".to_string(), "stocks".to_string()],
         );
-        
+
         assert_eq!(filter.user_id, Some("user123".to_string()));
-        assert_eq!(filter.keywords, Some(vec!["trading".to_string(), "stocks".to_string()]));
-        
+        assert_eq!(
+            filter.keywords,
+            Some(vec!["trading".to_string(), "stocks".to_string()])
+        );
+
         let session_filter = QueryFilter::for_session("user123", "session456");
         assert_eq!(session_filter.user_id, Some("user123".to_string()));
         assert_eq!(session_filter.session_id, Some("session456".to_string()));
-        
+
         let importance_filter = QueryFilter::high_importance("user123", 0.8);
         assert_eq!(importance_filter.min_importance, Some(0.8));
     }
-    
+
     #[test]
     fn test_paginated_response() {
         let response = PaginatedResponse::<String>::empty();
         assert!(response.is_empty());
         assert_eq!(response.len(), 0);
         assert_eq!(response.total_count, 0);
-        
+
         let response = PaginatedResponse {
             data: vec!["item1".to_string(), "item2".to_string()],
             total_count: 10,
@@ -428,21 +434,27 @@ mod tests {
             has_next: true,
             has_prev: false,
         };
-        
+
         assert!(!response.is_empty());
         assert_eq!(response.len(), 2);
         assert!(response.has_next);
         assert!(!response.has_prev);
     }
-    
+
     #[test]
     fn test_decay_status() {
         assert_eq!(DecayStatus::Running.to_string(), "running");
         assert_eq!(DecayStatus::Completed.to_string(), "completed");
         assert_eq!(DecayStatus::Failed.to_string(), "failed");
-        
-        assert_eq!("running".parse::<DecayStatus>().unwrap().to_string(), "running");
-        assert_eq!("COMPLETED".parse::<DecayStatus>().unwrap().to_string(), "completed");
+
+        assert_eq!(
+            "running".parse::<DecayStatus>().unwrap().to_string(),
+            "running"
+        );
+        assert_eq!(
+            "COMPLETED".parse::<DecayStatus>().unwrap().to_string(),
+            "completed"
+        );
         assert!("invalid".parse::<DecayStatus>().is_err());
     }
 }

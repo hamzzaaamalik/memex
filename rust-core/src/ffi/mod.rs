@@ -3,12 +3,12 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-use crate::database::{Database, DatabaseConfig};
-use crate::core::{MindCacheConfig, RequestValidator};
+use crate::core::decay::DecayEngine;
 use crate::core::memory::MemoryManager;
 use crate::core::session::SessionManager;
-use crate::core::decay::DecayEngine;
+use crate::core::{MindCacheConfig, RequestValidator};
 use crate::database::models::*;
+use crate::database::{Database, DatabaseConfig};
 
 // Global state for FFI instances
 static INSTANCE_COUNTER: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(1);
@@ -25,7 +25,9 @@ pub struct MindCacheHandle {
 }
 
 // Main initialization function
-pub fn create_mindcache_instance(config: MindCacheConfig) -> Result<usize, Box<dyn std::error::Error>> {
+pub fn create_mindcache_instance(
+    config: MindCacheConfig,
+) -> Result<usize, Box<dyn std::error::Error>> {
     init_with_config(config)
 }
 
@@ -65,7 +67,9 @@ fn init_with_config(config: MindCacheConfig) -> Result<usize, Box<dyn std::error
 }
 
 // Helper functions for internal use
-pub fn get_instance(handle: usize) -> Option<std::sync::MutexGuard<'static, HashMap<usize, MindCacheHandle>>> {
+pub fn get_instance(
+    handle: usize,
+) -> Option<std::sync::MutexGuard<'static, HashMap<usize, MindCacheHandle>>> {
     if handle == 0 {
         return None;
     }
