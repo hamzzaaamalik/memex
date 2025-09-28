@@ -18,7 +18,9 @@
       "Bash(npm install)",
       "Bash(npm start)",
       "Bash(node:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(dir \"C:\\Users\\hamim\\Downloads\\mindcache-main2\\mindcache-main\\node-api\\controllers\")",
+      "Bash(timeout 10 npm start)"
     ],
     "deny": [],
     "ask": []

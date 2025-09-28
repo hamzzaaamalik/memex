@@ -38,39 +38,39 @@ Modern AI applications need persistent, contextual memory that can scale efficie
 MindCache follows a modular architecture with clear separation between the high-performance core and application interfaces:
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     Client Applications                          │
+┌─────────────────────────────────────────────────────────────────  ┐
+│                     Client Applications                           │
 ├─────────────┬─────────────┬─────────────┬─────────────────────────┤
 │ JavaScript  │ CLI Tool    │ REST API    │ Direct SDK Integration  │
-│ SDK         │ (Node.js)   │ Clients     │ (Examples & Demos)     │
+│ SDK         │ (Node.js)   │ Clients     │ (Examples & Demos)      │
 └─────────────┴─────────────┴─────────────┴─────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Node.js REST API Server                      │
-│  • Express.js with middleware (CORS, rate limiting, etc.)      │
-│  • Request validation and error handling                       │
-│  • Health checks and monitoring endpoints                      │
-│  • Session management and memory operations                    │
+│  • Express.js with middleware (CORS, rate limiting, etc.)       │
+│  • Request validation and error handling                        │
+│  • Health checks and monitoring endpoints                       │
+│  • Session management and memory operations                     │
 └─────────────────────────────────────────────────────────────────┘
                               │ FFI Bridge
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      Rust Core Engine                          │
-│  • High-performance memory storage and retrieval               │
-│  • SQLite with connection pooling and optimization            │
-│  • Memory decay algorithms and importance scoring             │
-│  • Vector search and semantic matching                        │
-│  • Async support and thread-safe operations                   │
+│                      Rust Core Engine                           │
+│  • High-performance memory storage and retrieval                │
+│  • SQLite with connection pooling and optimization              │
+│  • Memory decay algorithms and importance scoring               │
+│  • Vector search and semantic matching                          │
+│  • Async support and thread-safe operations                     │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Persistent Storage                           │
-│  • SQLite database with WAL mode                              │
-│  • Compressed memory content                                  │
-│  • Indexed search and metadata                                │
-│  • Backup and export capabilities                             │
+│  • SQLite database with WAL mode                                │
+│  • Compressed memory content                                    │
+│  • Indexed search and metadata                                  │
+│  • Backup and export capabilities                               │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -156,7 +156,7 @@ MindCache fills a unique gap in the AI infrastructure landscape:
 **vs Elasticsearch:**
 - **Zero configuration** for AI use cases (Elasticsearch needs extensive setup)
 - **Memory-specific optimization** (built for conversation context, not web search)
-- ✅ **Lightweight deployment** (single binary vs cluster management)
+- **Lightweight deployment** (single binary vs cluster management)
 
 > **MindCache gives you Redis-level performance with persistent, AI-optimized memory management — without the complexity of enterprise search or the limitations of generic databases.**
 
@@ -212,7 +212,7 @@ mindcache save --user "alice" --session "test" --content "Hello MindCache!"
 mindcache recall --user "alice" --query "hello"
 ```
 
-### 🚀 **5-Minute AI Agent Example**
+### **5-Minute AI Agent Example**
 
 Here's a complete, runnable example showing how to build an AI agent with persistent memory:
 
@@ -234,7 +234,7 @@ const mindcache = new MindCacheSDK({
     });
 
     const sessionId = session.data.sessionId;
-    console.log('🧠 Session created:', sessionId);
+    console.log('Session created:', sessionId);
 
     // Save important context about the user
     await mindcache.saveMemory({
@@ -275,8 +275,8 @@ const mindcache = new MindCacheSDK({
       limit: 5
     });
 
-    console.log('🔍 Retrieved context for:', userQuery);
-    console.log('📋 Relevant memories:', relevantContext.data.length);
+    console.log('Retrieved context for:', userQuery);
+    console.log('Relevant memories:', relevantContext.data.length);
 
     // Use the context to generate a personalized response
     relevantContext.data.forEach((memory, i) => {
@@ -290,7 +290,7 @@ const mindcache = new MindCacheSDK({
     console.log('\nAI Agent successfully used persistent memory for context-aware responses!');
 
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('Error:', error.message);
   }
 })();
 ```
@@ -303,10 +303,10 @@ node mindcache-example.js
 
 **Expected output:**
 ```
-🧠 Session created: session_abc123
-💾 Saved user context and preferences
-🔍 Retrieved context for: How can I optimize my application?
-📋 Relevant memories: 3
+Session created: session_abc123
+Saved user context and preferences
+Retrieved context for: How can I optimize my application?
+Relevant memories: 3
   1. [0.9] User prefers concise, technical answers with code examples
   2. [0.8] User is working on a Node.js microservices project with Docker
   3. [0.7] User reported performance issues with database queries in production
@@ -314,7 +314,7 @@ node mindcache-example.js
 AI Agent successfully used persistent memory for context-aware responses!
 ```
 
-> **🎯 This is what makes MindCache powerful**: Your AI remembers user preferences, project context, and conversation history across sessions — enabling truly personalized, context-aware interactions.
+> **This is what makes MindCache powerful**: Your AI remembers user preferences, project context, and conversation history across sessions — enabling truly personalized, context-aware interactions.
 
 ---
 
@@ -857,47 +857,47 @@ npm test
 
 ## Roadmap
 
-> **🚀 Building the future of AI memory infrastructure**
+> **Building the future of AI memory infrastructure**
 
 ### Current Version (v1.0) - **Foundation**
 **The Solid Foundation for AI Memory**
-- ⚡ Rust-powered core engine with proven <100ms performance at 5M+ records
-- 🌐 Production-ready REST API with comprehensive endpoints
-- 💻 CLI tool and JavaScript SDK for seamless integration
-- 🧠 Intelligent memory decay and TTL lifecycle management
-- 📊 Session-aware organization and context tracking
-- 🔍 Advanced search with SQLite FTS5 and semantic filtering
+- Rust-powered core engine with proven <100ms performance at 5M+ records
+- Production-ready REST API with comprehensive endpoints
+- CLI tool and JavaScript SDK for seamless integration
+- Intelligent memory decay and TTL lifecycle management
+- Session-aware organization and context tracking
+- Advanced search with SQLite FTS5 and semantic filtering
 
 ### Version 1.1 (Q4 2025) - **Intelligence**
 **AI-Native Memory Evolution**
-- 🧬 **Next-Gen Vector Search**: Advanced semantic similarity with custom embeddings
-- 📈 **Memory Intelligence**: AI-powered usage patterns and predictive insights
-- 🔐 **Enterprise Authentication**: Multi-tenant API keys and fine-grained permissions
-- 📱 **Universal SDKs**: React Native, Flutter, and cross-platform mobile support
-- ⚡ **Real-Time Streaming**: Live memory updates and WebSocket integration
+- **Next-Gen Vector Search**: Advanced semantic similarity with custom embeddings
+- **Memory Intelligence**: AI-powered usage patterns and predictive insights
+- **Enterprise Authentication**: Multi-tenant API keys and fine-grained permissions
+- **Universal SDKs**: React Native, Flutter, and cross-platform mobile support
+- **Real-Time Streaming**: Live memory updates and WebSocket integration
 
 ### Version 1.2 (Q1 2026) - **Connectivity**
 **The Connected Memory Ecosystem**
-- 🌐 **GraphQL Memory API**: Modern, flexible query interface for complex applications
-- 🔄 **Multi-Node Synchronization**: Distributed memory with eventual consistency
-- 🤖 **Native AI Integration**: Built-in embedding generation and LLM connectors
-- 📊 **Enterprise Command Center**: Beautiful web UI for memory analytics and management
-- 🔌 **Plugin Ecosystem**: Extensible memory processors and custom integrations
+- **GraphQL Memory API**: Modern, flexible query interface for complex applications
+- **Multi-Node Synchronization**: Distributed memory with eventual consistency
+- **Native AI Integration**: Built-in embedding generation and LLM connectors
+- **Enterprise Command Center**: Beautiful web UI for memory analytics and management
+- **Plugin Ecosystem**: Extensible memory processors and custom integrations
 
 ### Version 2.0 (Q2 2026) - **The Memory Protocol**
-**🌟 The World's First Distributed, Local-First Memory Protocol for AI Agents**
+**The World's First Distributed, Local-First Memory Protocol for AI Agents**
 
 **Scaling Beyond Databases into Global, Decentralized AI Memory Fabric:**
 
-- 🌍 **Planetary-Scale Architecture**: Seamlessly distribute AI memory across continents with zero vendor lock-in
-- 🛡️ **Zero-Trust Security Model**: Military-grade encryption, audit trails, and compliance-by-design (SOC2, GDPR, HIPAA)
-- 🧠 **Autonomous Memory Intelligence**: Self-optimizing importance scoring, predictive memory decay, and adaptive performance tuning
-- 🌐 **Decentralized Memory Mesh**: P2P memory synchronization enabling truly decentralized AI agent networks
-- 🚀 **Memory-as-a-Protocol**: Standardized interfaces for cross-agent memory sharing and collaboration
-- 🔮 **Temporal Memory Analytics**: Time-travel debugging, memory versioning, and causal relationship mapping
-- ⚡ **Quantum-Ready Architecture**: Future-proofed design for quantum-enhanced AI memory operations
+- **Planetary-Scale Architecture**: Seamlessly distribute AI memory across continents with zero vendor lock-in
+- **Zero-Trust Security Model**: Military-grade encryption, audit trails, and compliance-by-design (SOC2, GDPR, HIPAA)
+- **Autonomous Memory Intelligence**: Self-optimizing importance scoring, predictive memory decay, and adaptive performance tuning
+- **Decentralized Memory Mesh**: P2P memory synchronization enabling truly decentralized AI agent networks
+- **Memory-as-a-Protocol**: Standardized interfaces for cross-agent memory sharing and collaboration
+- **Temporal Memory Analytics**: Time-travel debugging, memory versioning, and causal relationship mapping
+- **Quantum-Ready Architecture**: Future-proofed design for quantum-enhanced AI memory operations
 
-> **🎯 Vision**: By 2026, MindCache will power the memory layer for millions of AI agents worldwide, creating the first truly decentralized, intelligent memory network that enables AI systems to learn, remember, and collaborate at planetary scale.
+> **Vision**: By 2026, MindCache will power the memory layer for millions of AI agents worldwide, creating the first truly decentralized, intelligent memory network that enables AI systems to learn, remember, and collaborate at planetary scale.
 
 **Join us in building the memory infrastructure that will power the next generation of AI.**
 
@@ -925,7 +925,7 @@ MindCache is open source and free to use in both personal and commercial project
 - **Discussions**: [Community discussions and Q&A](https://github.com/hamzzaaamalik/mindcache/discussions)
 - **Documentation**: [Comprehensive guides and examples](docs/)
 
-### 📊 Project Stats
+### Project Stats
 
 ![GitHub stars](https://img.shields.io/github/stars/hamzzaaamalik/mindcache)
 ![GitHub forks](https://img.shields.io/github/forks/hamzzaaamalik/mindcache)
@@ -934,6 +934,6 @@ MindCache is open source and free to use in both personal and commercial project
 
 ---
 
-**Ready to give your AI applications persistent memory?** 🧠
+**Ready to give your AI applications persistent memory?**
 
 [Get Started](#quick-start) | [View Examples](examples/) | [API Reference](#api-reference) | [Contributing](#contributing)

@@ -164,6 +164,16 @@ impl SimpleDatabase {
             params.push(Box::new(*min_importance));
         }
 
+        // Add keyword search
+        if let Some(keywords) = &filter.keywords {
+            if !keywords.is_empty() {
+                for keyword in keywords {
+                    query.push_str(" AND content LIKE ?");
+                    params.push(Box::new(format!("%{}%", keyword)));
+                }
+            }
+        }
+
         query.push_str(" ORDER BY created_at DESC");
 
         // Add limit and offset
@@ -229,6 +239,13 @@ impl SimpleDatabase {
         }
         if let Some(min_importance) = &filter.min_importance {
             count_query.push_str(" AND importance >= ?");
+        }
+        if let Some(keywords) = &filter.keywords {
+            if !keywords.is_empty() {
+                for _keyword in keywords {
+                    count_query.push_str(" AND content LIKE ?");
+                }
+            }
         }
 
         let mut count_stmt = conn.prepare(&count_query)?;

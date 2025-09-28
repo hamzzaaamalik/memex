@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const statsController = require('../controllers/statsController')
+const { validateUserId } = require('../middleware/validation')
 
 /**
  * @route GET /api/stats
@@ -15,7 +16,7 @@ router.get('/', statsController.getSystemStats)
  * @access Public
  * @params userId: string
  */
-router.get('/user/:userId', statsController.getUserStats)
+router.get('/user/:userId', validateUserId, statsController.getUserStats)
 
 /**
  * @route GET /api/stats/memory

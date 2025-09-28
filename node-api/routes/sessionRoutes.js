@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const sessionController = require('../controllers/sessionController')
-const { validateSessionCreate, validateSessionSearch } = require('../middleware/validation')
+const { validateSessionCreate, validateSessionSearch, validateUserId, validateSessionId } = require('../middleware/validation')
 
 /**
  * @route POST /api/sessions
@@ -21,7 +21,7 @@ router.post('/', validateSessionCreate, sessionController.createSession)
  * @access Public
  * @params userId: string
  */
-router.get('/:userId', sessionController.getUserSessions)
+router.get('/:userId', validateUserId, sessionController.getUserSessions)
 
 /**
  * @route GET /api/sessions/:userId/:sessionId
@@ -29,7 +29,7 @@ router.get('/:userId', sessionController.getUserSessions)
  * @access Public
  * @params userId: string, sessionId: string
  */
-router.get('/:userId/:sessionId', sessionController.getSession)
+router.get('/:userId/:sessionId', validateUserId, validateSessionId, sessionController.getSession)
 
 /**
  * @route GET /api/sessions/:userId/:sessionId/memories
@@ -37,7 +37,7 @@ router.get('/:userId/:sessionId', sessionController.getSession)
  * @access Public
  * @params userId: string, sessionId: string
  */
-router.get('/:userId/:sessionId/memories', sessionController.getSessionMemories)
+router.get('/:userId/:sessionId/memories', validateUserId, validateSessionId, sessionController.getSessionMemories)
 
 /**
  * @route POST /api/sessions/search
@@ -61,7 +61,7 @@ router.post('/search', validateSessionSearch, sessionController.searchSessions)
  *   metadata?: object
  * }
  */
-router.put('/:userId/:sessionId', sessionController.updateSession)
+router.put('/:userId/:sessionId', validateUserId, validateSessionId, sessionController.updateSession)
 
 /**
  * @route DELETE /api/sessions/:userId/:sessionId
@@ -69,7 +69,7 @@ router.put('/:userId/:sessionId', sessionController.updateSession)
  * @access Public
  * @params userId: string, sessionId: string
  */
-router.delete('/:userId/:sessionId', sessionController.deleteSession)
+router.delete('/:userId/:sessionId', validateUserId, validateSessionId, sessionController.deleteSession)
 
 /**
  * @route POST /api/sessions/:sessionId/summarize
@@ -77,6 +77,6 @@ router.delete('/:userId/:sessionId', sessionController.deleteSession)
  * @access Public
  * @params sessionId: string
  */
-router.post('/:sessionId/summarize', sessionController.summarizeSession)
+router.post('/:sessionId/summarize', validateSessionId, sessionController.summarizeSession)
 
 module.exports = router

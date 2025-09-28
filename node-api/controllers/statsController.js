@@ -348,7 +348,9 @@ function getNodeSystemStats () {
 /**
 * Calculate detailed user statistics
 */
-function calculateDetailedUserStats (memories, sessions) {
+function calculateDetailedUserStats (memoriesResponse, sessions) {
+  const memories = memoriesResponse.data || memoriesResponse || []
+
   if (!memories || memories.length === 0) {
     return {
       memories: { total: 0 },

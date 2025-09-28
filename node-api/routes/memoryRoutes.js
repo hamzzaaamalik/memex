@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const memoryController = require('../controllers/memoryController')
-const { validateMemorySave, validateMemoryRecall, validateMemorySummarize } = require('../middleware/validation')
+const { validateMemorySave, validateMemoryRecall, validateMemorySummarize, validateBulkMemories, validateUserId, validateSearchQuery } = require('../middleware/validation')
 
 /**
  * @route POST /api/memory/save
@@ -51,7 +51,7 @@ router.post('/summarize', validateMemorySummarize, memoryController.summarizeSes
  * @access Public
  * @params userId: string
  */
-router.get('/export/:userId', memoryController.exportUserMemories)
+router.get('/export/:userId', validateUserId, memoryController.exportUserMemories)
 
 /**
  * @route DELETE /api/memory/decay
@@ -78,7 +78,7 @@ router.delete('/decay', memoryController.runDecayProcess)
  *   tags?: string (comma-separated)
  * }
  */
-router.get('/search', memoryController.searchMemories)
+router.get('/search', validateSearchQuery, memoryController.searchMemories)
 
 /**
  * @route POST /api/memory/bulk
@@ -95,7 +95,7 @@ router.get('/search', memoryController.searchMemories)
  *   }]
  * }
  */
-router.post('/bulk', memoryController.bulkSaveMemories)
+router.post('/bulk', validateBulkMemories, memoryController.bulkSaveMemories)
 
 /**
  * @route GET /api/memory/stats/:userId
@@ -103,6 +103,6 @@ router.post('/bulk', memoryController.bulkSaveMemories)
  * @access Public
  * @params userId: string
  */
-router.get('/stats/:userId', memoryController.getUserMemoryStats)
+router.get('/stats/:userId', validateUserId, memoryController.getUserMemoryStats)
 
 module.exports = router

@@ -13,7 +13,7 @@ const sessionRoutes = require('./routes/sessionRoutes')
 const statsRoutes = require('./routes/statsRoutes')
 
 // Import middleware
-const errorHandler = require('./middleware/errorHandler')
+const { errorHandler } = require('./middleware/errorHandler')
 const validateRequest = require('./middleware/validateRequest')
 
 // Import Rust bridge
@@ -297,7 +297,7 @@ async function startServer () {
     await initializeServer()
     configureMiddleware()
     configureRoutes()
-    // configureErrorHandling();
+    configureErrorHandling();
 
     // Start HTTP server
     const server = app.listen(PORT, () => {
