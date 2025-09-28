@@ -1,0 +1,55 @@
+{
+  "name": "mindcache-cli",
+  "version": "1.0.0",
+  "description": "Command Line Interface for MindCache - Memory engine for AI applications",
+  "main": "mindcache.js",
+  "bin": {
+    "mindcache": "./mindcache.js"
+  },
+  "scripts": {
+    "start": "node mindcache.js",
+    "test": "jest",
+    "link": "npm link",
+    "unlink": "npm unlink -g",
+    "build": "pkg mindcache.js --out-path dist/",
+    "install-global": "npm install -g ."
+  },
+  "keywords": [
+    "cli",
+    "mindcache",
+    "memory",
+    "ai",
+    "llm",
+    "cache",
+    "developer-tools"
+  ],
+  "author": {
+    "name": "MindCache Team",
+    "email": "team@mindcache.dev"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mindcache/mindcache.git",
+    "directory": "cli"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "commander": "^9.5.0",
+    "inquirer": "^8.2.6",
+    "chalk": "^4.1.2",
+    "ora": "^5.4.1",
+    "cli-table3": "^0.6.3"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "pkg": "^5.8.1"
+  },
+  "files": [
+    "mindcache.js",
+    "README.md"
+  ],
+  "preferGlobal": true
+}

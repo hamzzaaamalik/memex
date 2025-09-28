@@ -1,0 +1,19 @@
+{
+  "name": "mindcache-performance-test",
+  "version": "1.0.0",
+  "description": "Performance testing suite for MindCache search functionality",
+  "main": "search_performance_test.js",
+  "scripts": {
+    "test": "node search_performance_test.js",
+    "test:small": "node search_performance_test.js --size=1000",
+    "test:medium": "node search_performance_test.js --size=5000",
+    "test:large": "node search_performance_test.js --size=10000",
+    "benchmark": "node benchmark_scenarios.js",
+    "analyze": "node analyze_results.js"
+  },
+  "dependencies": {
+    "../sdk": "file:../sdk"
+  },
+  "keywords": ["performance", "testing", "mindcache", "search", "benchmark"],
+  "author": "MindCache Team"
+}

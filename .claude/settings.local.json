@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git rm:*)",
+      "Bash(git push:*)",
+      "Bash(git reset:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(tree:*)",
+      "Bash(cargo build:*)",
+      "Bash(tasklist)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(curl -X POST http://localhost:3000/api/memory/save -H \"Content-Type: application/json\" -d '{\"\"userId\"\": \"\"user_123\"\", \"\"sessionId\"\": \"\"session_456\"\", \"\"content\"\": \"\"User prefers dark mode\"\", \"\"importance\"\": 0.8}')",
+      "Bash(curl -X POST http://localhost:3000/api/memory/recall -H \"Content-Type: application/json\" -d '{\"\"userId\"\": \"\"user_123\"\", \"\"query\"\": \"\"dark mode preference\"\", \"\"sessionId\"\": \"\"session_456\"\", \"\"limit\"\": 10}')",
+      "Bash(netstat:*)",
+      "Bash(curl -X POST http://localhost:3000/api/memory/recall -H \"Content-Type: application/json\" -d '{\"\"userId\"\": \"\"user_123\"\", \"\"sessionId\"\": \"\"session_456\"\"}')",
+      "Bash(npm install)",
+      "Bash(npm start)",
+      "Bash(node:*)",
+      "Bash(curl:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
