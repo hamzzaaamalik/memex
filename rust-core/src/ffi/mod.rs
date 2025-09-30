@@ -6,32 +6,32 @@ use std::sync::Mutex;
 use crate::core::decay::DecayEngine;
 use crate::core::memory::MemoryManager;
 use crate::core::session::SessionManager;
-use crate::core::{MindCacheConfig, RequestValidator};
+use crate::core::{MemexConfig, RequestValidator};
 use crate::database::models::*;
 use crate::database::{Database, DatabaseConfig};
 
 // Global state for FFI instances
 static INSTANCE_COUNTER: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(1);
-static INSTANCES: once_cell::sync::Lazy<Mutex<HashMap<usize, MindCacheHandle>>> =
+static INSTANCES: once_cell::sync::Lazy<Mutex<HashMap<usize, MemexHandle>>> =
     once_cell::sync::Lazy::new(|| Mutex::new(HashMap::new()));
 
-/// Basic MindCache FFI handle
+/// Basic Memex FFI handle
 #[allow(dead_code)]
-pub struct MindCacheHandle {
+pub struct MemexHandle {
     memory_manager: MemoryManager,
     session_manager: SessionManager,
     decay_engine: DecayEngine,
-    config: MindCacheConfig,
+    config: MemexConfig,
 }
 
 // Main initialization function
-pub fn create_mindcache_instance(
-    config: MindCacheConfig,
+pub fn create_memex_instance(
+    config: MemexConfig,
 ) -> Result<usize, Box<dyn std::error::Error>> {
     init_with_config(config)
 }
 
-fn init_with_config(config: MindCacheConfig) -> Result<usize, Box<dyn std::error::Error>> {
+fn init_with_config(config: MemexConfig) -> Result<usize, Box<dyn std::error::Error>> {
     // Initialize database
     let db_config = DatabaseConfig {
         path: config.database_path.clone(),
@@ -48,7 +48,7 @@ fn init_with_config(config: MindCacheConfig) -> Result<usize, Box<dyn std::error
     let decay_engine = DecayEngine::new(database, validator, decay_policy);
 
     // Create handle
-    let handle = MindCacheHandle {
+    let handle = MemexHandle {
         memory_manager,
         session_manager,
         decay_engine,
@@ -62,14 +62,14 @@ fn init_with_config(config: MindCacheConfig) -> Result<usize, Box<dyn std::error
     let mut instances = INSTANCES.lock().unwrap();
     instances.insert(instance_id, handle);
 
-    log::debug!("Created MindCache instance {}", instance_id);
+    log::debug!("Created Memex instance {}", instance_id);
     Ok(instance_id)
 }
 
 // Helper functions for internal use
 pub fn get_instance(
     handle: usize,
-) -> Option<std::sync::MutexGuard<'static, HashMap<usize, MindCacheHandle>>> {
+) -> Option<std::sync::MutexGuard<'static, HashMap<usize, MemexHandle>>> {
     if handle == 0 {
         return None;
     }

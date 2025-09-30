@@ -1,4 +1,4 @@
-//! Database module for MindCache
+//! Database module for Memex
 //!
 //! Provides SQLite-based storage with FTS5 full-text search capabilities.
 pub mod models;
@@ -39,7 +39,7 @@ pub struct DatabaseConfig {
 impl Default for DatabaseConfig {
     fn default() -> Self {
         Self {
-            path: "mindcache.db".to_string(),
+            path: "memex.db".to_string(),
             enable_wal: true,
             cache_size: -64000,  // 64MB cache
             busy_timeout: 30000, // 30 seconds

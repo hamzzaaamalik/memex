@@ -25,7 +25,9 @@
       "Bash(cargo clippy:*)",
       "Bash(cargo check:*)",
       "Bash(cargo test:*)",
-      "Bash(npm test)"
+      "Bash(npm test)",
+      "Bash(dir:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

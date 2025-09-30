@@ -434,7 +434,7 @@ pub struct UserMemoryStats {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::{MindCacheConfig, RequestValidator};
+    use crate::core::{MemexConfig, RequestValidator};
     use crate::database::{Database, DatabaseConfig};
     use tempfile::TempDir;
 
@@ -450,7 +450,7 @@ mod tests {
         };
 
         let database = Database::new(db_config).unwrap();
-        let config = MindCacheConfig::default();
+        let config = MemexConfig::default();
         let validator = RequestValidator::new(&config);
         let manager = MemoryManager::new(database, validator);
 

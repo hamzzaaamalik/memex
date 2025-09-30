@@ -1,7 +1,7 @@
 {
-  "name": "mindcache-performance-test",
+  "name": "memex-performance-test",
   "version": "1.0.0",
-  "description": "Performance testing suite for MindCache search functionality",
+  "description": "Performance testing suite for Memex search functionality",
   "main": "search_performance_test.js",
   "scripts": {
     "test": "node search_performance_test.js",
@@ -14,6 +14,6 @@
   "dependencies": {
     "../sdk": "file:../sdk"
   },
-  "keywords": ["performance", "testing", "mindcache", "search", "benchmark"],
-  "author": "MindCache Team"
+  "keywords": ["performance", "testing", "memex", "search", "benchmark"],
+  "author": "Memex Team"
 }

@@ -1,19 +1,19 @@
 [package]
-name = "mindcache-core"
+name = "memex-core"
 version = "0.1.0"
 edition = "2021"
-authors = ["MindCache Team"]
+authors = ["Memex Team"]
 description = "A lightweight, local-first memory engine for AI applications with vector search and async support"
 license = "MIT"
-repository = "https://github.com/hamzzaaamalik/mindcache"
-homepage = "https://mindcache.dev"
-documentation = "https://docs.rs/mindcache-core"
+repository = "https://github.com/hamzzaaamalik/memex"
+homepage = "https://memex.dev"
+documentation = "https://docs.rs/memex-core"
 keywords = ["memory", "ai", "llm", "storage", "cache", "vector", "search"]
 categories = ["database", "memory-management", "api-bindings", "asynchronous"]
 readme = "README.md"
 
 [lib]
-name = "mindcache_core"
+name = "memex_core"
 path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 

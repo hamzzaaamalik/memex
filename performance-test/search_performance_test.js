@@ -1,16 +1,16 @@
 /**
- * MindCache Search Performance Test
+ * Memex Search Performance Test
  *
  * Simulates realistic scenarios with millions of memory records
  * to test search performance and identify bottlenecks.
  */
 
-const { MindCacheSDK } = require('../sdk');
+const { MemexSDK } = require('../sdk');
 const { performance } = require('perf_hooks');
 
 class SearchPerformanceTest {
     constructor() {
-        this.sdk = new MindCacheSDK({
+        this.sdk = new MemexSDK({
             baseUrl: 'http://localhost:3000',
             timeout: 30000,
             debug: false
@@ -416,7 +416,7 @@ class SearchPerformanceTest {
     async analyzeResourceUsage() {
         console.log('\n💾 Resource Usage Analysis:');
 
-        // Get current stats from MindCache
+        // Get current stats from Memex
         try {
             const healthCheck = await this.sdk.makeRequest('GET', '/health');
             console.log('Server Health:', healthCheck.status);
@@ -484,7 +484,7 @@ class SearchPerformanceTest {
      * Main test runner
      */
     async run() {
-        console.log('🧠 MindCache Search Performance Test');
+        console.log('🧠 Memex Search Performance Test');
         console.log('=====================================\n');
 
         console.log(`📋 Test Configuration:`);
@@ -513,7 +513,7 @@ class SearchPerformanceTest {
 
         } catch (error) {
             console.error('\n❌ Performance test failed:', error.message);
-            console.error('Make sure MindCache API server is running on http://localhost:3000');
+            console.error('Make sure Memex API server is running on http://localhost:3000');
         }
     }
 }

@@ -1,10 +1,10 @@
-# MindCache Search Performance Test
+# Memex Search Performance Test
 
-This comprehensive test suite demonstrates how MindCache's search functionality performs with realistic datasets and projects performance to millions of records, proving its suitability for production AI applications.
+This comprehensive test suite demonstrates how Memex's search functionality performs with realistic datasets and projects performance to millions of records, proving its suitability for production AI applications.
 
 ## 🚀 Quick Start
 
-1. **Start MindCache API Server:**
+1. **Start Memex API Server:**
    ```bash
    cd node-api
    npm start
@@ -50,7 +50,7 @@ This comprehensive test suite demonstrates how MindCache's search functionality 
 
 ### Actual Test Results (200-Record Dataset)
 
-Based on real test runs with the MindCache system:
+Based on real test runs with the Memex system:
 
 ```
 🔍 Running Search Performance Tests
@@ -136,9 +136,9 @@ Using SQLite FTS5 scaling characteristics and database optimization theory:
 ### Basic Performance Test
 ```bash
 # Clone the repository and navigate to performance-test
-cd mindcache/performance-test
+cd memex/performance-test
 
-# Ensure MindCache server is running
+# Ensure Memex server is running
 cd ../node-api && npm start
 
 # In another terminal, run the test
@@ -180,7 +180,7 @@ Based on comprehensive testing, here are optimized configurations for production
 ### 1. **Database Configuration (node-api/.env)**
 ```env
 # SQLite Optimizations
-MINDCACHE_STORAGE_PATH=./mindcache_data
+MEMEX_STORAGE_PATH=./memex_data
 SQLITE_CACHE_SIZE=-256000           # 256MB cache (critical for millions of records)
 SQLITE_WAL_MODE=true                # Write-ahead logging for concurrency
 BUSY_TIMEOUT=30000                  # 30 second timeout for high load
@@ -245,9 +245,9 @@ METRICS_ENABLED=true              # Enable Prometheus metrics
 
 ## 🎯 Conclusion & Key Takeaways
 
-### ✅ **MindCache is Production-Ready for Millions of Records**
+### ✅ **Memex is Production-Ready for Millions of Records**
 
-Our comprehensive testing proves that MindCache's search functionality is **exceptionally well-architected** for large-scale deployments:
+Our comprehensive testing proves that Memex's search functionality is **exceptionally well-architected** for large-scale deployments:
 
 - 🚀 **<100ms response times** for most queries, even with 5M+ records
 - ⚡ **SQLite FTS5** provides enterprise-grade full-text search performance
@@ -258,11 +258,11 @@ Our comprehensive testing proves that MindCache's search functionality is **exce
 
 ### 🏆 **Competitive Performance Benchmarks**
 
-MindCache outperforms many traditional solutions:
+Memex outperforms many traditional solutions:
 
 | Solution Type | 1M Record Search | Complexity | Setup Time |
 |---------------|------------------|------------|------------|
-| **MindCache** | **65ms** | Simple | 5 minutes |
+| **Memex** | **65ms** | Simple | 5 minutes |
 | Elasticsearch | 150-300ms | Complex | Days |
 | PostgreSQL FTS | 200-500ms | Medium | Hours |
 | Redis Search | 50-100ms | Medium | Hours |
@@ -270,7 +270,7 @@ MindCache outperforms many traditional solutions:
 
 ### 🎯 **Ideal Use Cases Validated**
 
-Based on our testing, MindCache excels at:
+Based on our testing, Memex excels at:
 
 - **🤖 AI Agent Memory**: Real-time conversation context retrieval
 - **💬 Chatbot Knowledge**: Instant access to large knowledge bases
@@ -281,7 +281,7 @@ Based on our testing, MindCache excels at:
 
 ### 📊 **Performance Guarantees**
 
-With proper configuration, MindCache guarantees:
+With proper configuration, Memex guarantees:
 
 - **Simple queries**: <50ms for user/session filtering
 - **Keyword search**: <120ms for full-text search across millions of records
@@ -297,15 +297,15 @@ With proper configuration, MindCache guarantees:
 4. **Scale gradually** using read replicas and connection tuning
 5. **Optimize queries** based on your specific access patterns
 
-MindCache delivers the **speed, scalability, and simplicity** needed for production AI applications requiring persistent, searchable memory at enterprise scale.
+Memex delivers the **speed, scalability, and simplicity** needed for production AI applications requiring persistent, searchable memory at enterprise scale.
 
 ---
 
-**Ready to test MindCache performance in your environment?**
+**Ready to test Memex performance in your environment?**
 
 ```bash
-git clone https://github.com/hamzzaaamalik/mindcache.git
-cd mindcache/performance-test
+git clone https://github.com/hamzzaaamalik/memex.git
+cd memex/performance-test
 node run_test.js
 ```
 

@@ -3,7 +3,7 @@
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::{MindCacheConfig, RequestValidator, RateLimiter, PerformanceMonitor};
+    use crate::core::{MemexConfig, RequestValidator, RateLimiter, PerformanceMonitor};
     use crate::core::memory::MemoryManager;
     use crate::core::session::SessionManager;
     use crate::core::decay::DecayEngine;
@@ -20,7 +20,7 @@ mod tests {
         };
         
         let database = Database::new(db_config).unwrap();
-        let config = MindCacheConfig::default();
+        let config = MemexConfig::default();
         let validator = RequestValidator::new(&config);
         
         let memory_manager = MemoryManager::new(database.clone(), validator.clone());
@@ -51,7 +51,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_request_validator() {
-        let config = MindCacheConfig {
+        let config = MemexConfig {
             enable_request_limits: true,
             max_requests_per_minute: 10,
             max_batch_size: 5,
@@ -613,7 +613,7 @@ mod tests {
    #[serial]
    fn test_config_validation() {
        // Test valid config
-       let valid_config = MindCacheConfig {
+       let valid_config = MemexConfig {
            database_path: "./test.db".to_string(),
            default_memory_ttl_hours: Some(720),
            max_memories_per_user: 10000,
@@ -623,21 +623,21 @@ mod tests {
            ..Default::default()
        };
        assert!(valid_config.validate().is_ok());
-       
+
        // Test invalid configs
-       let invalid_ttl = MindCacheConfig {
+       let invalid_ttl = MemexConfig {
            default_memory_ttl_hours: Some(0), // Invalid TTL
            ..Default::default()
        };
        assert!(invalid_ttl.validate().is_err());
-       
-       let invalid_threshold = MindCacheConfig {
+
+       let invalid_threshold = MemexConfig {
            importance_threshold: 1.5, // Invalid threshold
            ..Default::default()
        };
        assert!(invalid_threshold.validate().is_err());
-       
-       let invalid_batch_size = MindCacheConfig {
+
+       let invalid_batch_size = MemexConfig {
            max_batch_size: 0, // Invalid batch size
            ..Default::default()
        };

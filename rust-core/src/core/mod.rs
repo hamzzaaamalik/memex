@@ -1,8 +1,8 @@
-//! Core business logic for MindCache
+//! Core business logic for Memex
 //!
 //! This module contains the main business logic components:
 //! - Memory operations and management
-//! - Session handling and summaries  
+//! - Session handling and summaries
 //! - Decay policies and cleanup processes
 //! - Async variants for better Node.js integration
 
@@ -23,9 +23,9 @@ use validator::Validate;
 
 use crate::database::{models::*, Database};
 
-/// Main MindCache configuration
+/// Main Memex configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
-pub struct MindCacheConfig {
+pub struct MemexConfig {
     pub database_path: String,
 
     #[validate(range(min = 1, max = 8760))]
@@ -53,10 +53,10 @@ pub struct MindCacheConfig {
     pub max_batch_size: usize,
 }
 
-impl Default for MindCacheConfig {
+impl Default for MemexConfig {
     fn default() -> Self {
         Self {
-            database_path: "mindcache.db".to_string(),
+            database_path: "memex.db".to_string(),
             default_memory_ttl_hours: Some(24 * 30), // 30 days
             auto_decay_enabled: true,
             decay_interval_hours: 24,
@@ -148,11 +148,11 @@ pub enum ValidationError {
 #[derive(Clone)]
 pub struct RequestValidator {
     rate_limiter: Option<RateLimiter>,
-    config: MindCacheConfig,
+    config: MemexConfig,
 }
 
 impl RequestValidator {
-    pub fn new(config: &MindCacheConfig) -> Self {
+    pub fn new(config: &MemexConfig) -> Self {
         let rate_limiter = if config.enable_request_limits {
             Some(RateLimiter::new(
                 config.max_requests_per_minute,
@@ -440,7 +440,7 @@ mod tests {
 
     #[test]
     fn test_request_validator() {
-        let config = MindCacheConfig {
+        let config = MemexConfig {
             enable_request_limits: true,
             max_requests_per_minute: 10,
             max_batch_size: 5,
@@ -510,7 +510,7 @@ mod tests {
 
     #[test]
     fn test_config_validation() {
-        let mut config = MindCacheConfig::default();
+        let mut config = MemexConfig::default();
         assert!(config.validate().is_ok());
 
         // Test invalid values

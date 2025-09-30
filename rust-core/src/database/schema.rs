@@ -1,4 +1,4 @@
-//! Database schema definitions for MindCache SQLite backend
+//! Database schema definitions for Memex SQLite backend
 
 /// Main database schema SQL
 pub const SCHEMA_SQL: &str = r#"

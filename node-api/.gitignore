@@ -98,9 +98,9 @@ pids
 *.seed
 *.pid.lock
 
-# MindCache specific
-mindcache_data/
-*.mindcache
+# Memex specific
+memex_data/
+*.memex
 backups/
 
 # Test artifacts

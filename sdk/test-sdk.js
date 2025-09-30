@@ -1,8 +1,8 @@
 // test-sdk.js
-const { MindCacheSDK, MindCacheError } = require('./index.js');
+const { MemexSDK, MemexError } = require('./index.js');
 
 // Initialize SDK
-const mindcache = new MindCacheSDK({
+const memex = new MemexSDK({
     baseUrl: 'http://localhost:3000',
     timeout: 30000,
     debug: true  // Enable debug logging
@@ -10,11 +10,11 @@ const mindcache = new MindCacheSDK({
 
 async function playWithSDK() {
     try {
-        console.log('🧠 Playing with MindCache SDK...\n');
-        
+        console.log('🧠 Playing with Memex SDK...\n');
+
         // Test 1: Check API connectivity
         console.log('1. Testing API connectivity...');
-        const isAvailable = await mindcache.isApiAvailable();
+        const isAvailable = await memex.isApiAvailable();
         console.log(`API Available: ${isAvailable}\n`);
         
         if (!isAvailable) {
@@ -26,8 +26,8 @@ async function playWithSDK() {
         console.log('2. Saving memories...');
         const userId = `user_${Date.now()}`;
         const sessionId = `session_${Date.now()}`;
-        
-        const memory1 = await mindcache.saveMemory({
+
+        const memory1 = await memex.saveMemory({
             userId,
             sessionId,
             content: "I learned about JavaScript async/await today",
@@ -35,8 +35,8 @@ async function playWithSDK() {
             metadata: { category: "learning", language: "javascript" }
         });
         console.log('Memory 1 saved:', memory1.data.memoryId);
-        
-        const memory2 = await mindcache.saveMemory({
+
+        const memory2 = await memex.saveMemory({
             userId,
             sessionId,
             content: "Discovered a great API design pattern",
@@ -47,7 +47,7 @@ async function playWithSDK() {
         
         // Test 3: Recall memories
         console.log('\n3. Recalling memories...');
-        const recalled = await mindcache.recallMemories({
+        const recalled = await memex.recallMemories({
             userId,
             limit: 10
         });
@@ -58,7 +58,7 @@ async function playWithSDK() {
         
         // Test 4: Search with query
         console.log('\n4. Searching with query...');
-        const searchResults = await mindcache.recallMemories({
+        const searchResults = await memex.recallMemories({
             userId,
             query: "JavaScript",
             limit: 5
@@ -67,12 +67,12 @@ async function playWithSDK() {
         
         // Test 5: Session management
         console.log('\n5. Testing session management...');
-        const sessions = await mindcache.getUserSessions(userId);
+        const sessions = await memex.getUserSessions(userId);
         console.log(`User has ${sessions.data.sessions.length} sessions`);
-        
+
         // Test 6: Get statistics
         console.log('\n6. Getting statistics...');
-        const stats = await mindcache.getSystemStats();
+        const stats = await memex.getSystemStats();
         console.log('System stats:', {
             totalUsers: stats.data.storage?.total_users || 0,
             totalMemories: stats.data.storage?.total_memories || 0
@@ -82,7 +82,7 @@ async function playWithSDK() {
         
     } catch (error) {
         console.error('❌ Error:', error.message);
-        if (error instanceof MindCacheError) {
+        if (error instanceof MemexError) {
             console.error('Status:', error.status);
         }
     }

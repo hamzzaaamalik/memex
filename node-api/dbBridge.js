@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 
 /**
- * Rust Bridge - FFI interface to MindCache Rust core
+ * Rust Bridge - FFI interface to Memex Rust core
  *
  * This module provides a JavaScript interface to the Rust storage engine
  * using Node.js FFI (Foreign Function Interface)
@@ -13,7 +13,7 @@ const fs = require('fs');
 class RustBridge {
   constructor(config = {}) {
     this.config = {
-      database_path: config.storage_path || config.database_path || './mindcache.db',
+      database_path: config.storage_path || config.database_path || './memex.db',
       default_memory_ttl_hours: config.default_memory_ttl_hours || 720, // 30 days
       auto_decay_enabled: config.auto_decay_enabled !== false,
       decay_interval_hours: config.decay_interval_hours || 24,
@@ -40,8 +40,8 @@ class RustBridge {
       // Load the Rust library
       await this.loadRustLibrary();
 
-      // Initialize MindCache with configuration
-      await this.initializeMindCache();
+      // Initialize Memex with configuration
+      await this.initializeMemex();
 
       this.isInitialized = true;
       console.log('✅ Rust bridge initialized successfully');
@@ -68,45 +68,45 @@ class RustBridge {
     // Define FFI interface - Updated to match new Rust API
     this.rustLib = ffi.Library(libPath, {
       // Core initialization
-      mindcache_init: ['size_t', []],
-      mindcache_init_with_config: ['size_t', ['string']],
-      mindcache_destroy: ['void', ['size_t']],
-      mindcache_is_valid: ['bool', ['size_t']],
-      
+      memex_init: ['size_t', []],
+      memex_init_with_config: ['size_t', ['string']],
+      memex_destroy: ['void', ['size_t']],
+      memex_is_valid: ['bool', ['size_t']],
+
       // Memory operations - Updated signatures
-      mindcache_save: ['string', ['size_t', 'string', 'string', 'string', 'float', 'int', 'string']],
-      mindcache_save_batch: ['string', ['size_t', 'string', 'bool']],
-      mindcache_recall: ['string', ['size_t', 'string']],
-      mindcache_search: ['string', ['size_t', 'string', 'string', 'int', 'int']],
-      mindcache_get_memory: ['string', ['size_t', 'string']],
-      mindcache_update_memory: ['bool', ['size_t', 'string', 'string']],
-      mindcache_delete_memory: ['bool', ['size_t', 'string']],
-      
+      memex_save: ['string', ['size_t', 'string', 'string', 'string', 'float', 'int', 'string']],
+      memex_save_batch: ['string', ['size_t', 'string', 'bool']],
+      memex_recall: ['string', ['size_t', 'string']],
+      memex_search: ['string', ['size_t', 'string', 'string', 'int', 'int']],
+      memex_get_memory: ['string', ['size_t', 'string']],
+      memex_update_memory: ['bool', ['size_t', 'string', 'string']],
+      memex_delete_memory: ['bool', ['size_t', 'string']],
+
       // Session operations
-      mindcache_create_session: ['string', ['size_t', 'string', 'string']],
-      mindcache_get_user_sessions: ['string', ['size_t', 'string', 'int', 'int']],
-      mindcache_summarize_session: ['string', ['size_t', 'string']],
-      mindcache_search_sessions: ['string', ['size_t', 'string', 'string']],
-      mindcache_delete_session: ['bool', ['size_t', 'string', 'bool']],
-      
+      memex_create_session: ['string', ['size_t', 'string', 'string']],
+      memex_get_user_sessions: ['string', ['size_t', 'string', 'int', 'int']],
+      memex_summarize_session: ['string', ['size_t', 'string']],
+      memex_search_sessions: ['string', ['size_t', 'string', 'string']],
+      memex_delete_session: ['bool', ['size_t', 'string', 'bool']],
+
       // Decay operations
-      mindcache_decay: ['string', ['size_t']],
-      mindcache_decay_analyze: ['string', ['size_t']],
-      mindcache_update_decay_policy: ['bool', ['size_t', 'string']],
-      
+      memex_decay: ['string', ['size_t']],
+      memex_decay_analyze: ['string', ['size_t']],
+      memex_update_decay_policy: ['bool', ['size_t', 'string']],
+
       // Statistics and utilities
-      mindcache_get_stats: ['string', ['size_t']],
-      mindcache_export_user_memories: ['string', ['size_t', 'string']],
-      mindcache_get_user_stats: ['string', ['size_t', 'string']],
-      mindcache_get_session_analytics: ['string', ['size_t', 'string']],
-      
+      memex_get_stats: ['string', ['size_t']],
+      memex_export_user_memories: ['string', ['size_t', 'string']],
+      memex_get_user_stats: ['string', ['size_t', 'string']],
+      memex_get_session_analytics: ['string', ['size_t', 'string']],
+
       // Error handling
-      mindcache_get_last_error: ['int', []],
-      mindcache_error_message: ['string', ['int']],
-      
+      memex_get_last_error: ['int', []],
+      memex_error_message: ['string', ['int']],
+
       // Utility functions
-      mindcache_free_string: ['void', ['string']],
-      mindcache_version: ['string', []]
+      memex_free_string: ['void', ['string']],
+      memex_version: ['string', []]
     });
 
     console.log('✅ Rust library loaded successfully');
@@ -125,13 +125,13 @@ class RustBridge {
 
     switch (platform) {
       case 'win32':
-        libName = 'mindcache_core.dll';
+        libName = 'memex_core.dll';
         break;
       case 'darwin':
-        libName = 'libmindcache_core.dylib';
+        libName = 'libmemex_core.dylib';
         break;
       case 'linux':
-        libName = 'libmindcache_core.so';
+        libName = 'libmemex_core.so';
         break;
       default:
         throw new Error(`Unsupported platform: ${platform}`);
@@ -178,12 +178,12 @@ class RustBridge {
   }
 
   /**
-   * Initialize MindCache with configuration
+   * Initialize Memex with configuration
    */
-  async initializeMindCache() {
+  async initializeMemex() {
     // Convert Node.js config to Rust config format
     const rustConfig = {
-      database_path: this.config.database_path || this.config.storage_path || './mindcache.db',
+      database_path: this.config.database_path || this.config.storage_path || './memex.db',
       default_memory_ttl_hours: this.config.default_memory_ttl_hours,
       auto_decay_enabled: this.config.auto_decay_enabled,
       decay_interval_hours: this.config.decay_interval_hours,
@@ -196,29 +196,29 @@ class RustBridge {
     };
 
     const configJson = JSON.stringify(rustConfig);
-    console.log('⚙️ Initializing MindCache with config:', configJson);
+    console.log('⚙️ Initializing Memex with config:', configJson);
 
     // Initialize with configuration
-    this.handle = this.rustLib.mindcache_init_with_config(configJson);
+    this.handle = this.rustLib.memex_init_with_config(configJson);
 
     if (this.handle === 0) {
       // Fallback to default initialization
       console.warn('⚠️ Config initialization failed, trying default...');
-      this.handle = this.rustLib.mindcache_init();
+      this.handle = this.rustLib.memex_init();
 
       if (this.handle === 0) {
-        const errorCode = this.rustLib.mindcache_get_last_error();
-        const errorMessage = this.rustLib.mindcache_error_message(errorCode);
-        throw new Error(`Failed to initialize MindCache: ${errorMessage || 'Unknown error'}`);
+        const errorCode = this.rustLib.memex_get_last_error();
+        const errorMessage = this.rustLib.memex_error_message(errorCode);
+        throw new Error(`Failed to initialize Memex: ${errorMessage || 'Unknown error'}`);
       }
     }
 
     // Verify handle is valid
-    if (!this.rustLib.mindcache_is_valid(this.handle)) {
-      throw new Error('Invalid MindCache handle after initialization');
+    if (!this.rustLib.memex_is_valid(this.handle)) {
+      throw new Error('Invalid Memex handle after initialization');
     }
 
-    console.log(`✅ MindCache core initialized (handle: ${this.handle})`);
+    console.log(`✅ Memex core initialized (handle: ${this.handle})`);
   }
 
   /**
@@ -233,7 +233,7 @@ class RustBridge {
 
       console.log(`💾 Saving memory for user ${userId}, session ${sessionId}`);
 
-      const result = this.rustLib.mindcache_save(
+      const result = this.rustLib.memex_save(
         this.handle,
         userId,
         sessionId,
@@ -244,8 +244,8 @@ class RustBridge {
       );
 
       if (!result) {
-        const errorCode = this.rustLib.mindcache_get_last_error();
-        const errorMessage = this.rustLib.mindcache_error_message(errorCode);
+        const errorCode = this.rustLib.memex_get_last_error();
+        const errorMessage = this.rustLib.memex_error_message(errorCode);
         throw new Error(`Failed to save memory: ${errorMessage || 'Unknown error'}`);
       }
 
@@ -268,7 +268,7 @@ class RustBridge {
 
       console.log(`💾 Batch saving ${memories.length} memories`);
 
-      const result = this.rustLib.mindcache_save_batch(
+      const result = this.rustLib.memex_save_batch(
         this.handle,
         memoriesJson,
         failOnError
@@ -311,7 +311,7 @@ class RustBridge {
 
       console.log(`🔍 Recalling memories with filter:`, queryFilter);
 
-      const result = this.rustLib.mindcache_recall(this.handle, filterJson);
+      const result = this.rustLib.memex_recall(this.handle, filterJson);
 
       if (!result) {
         return { data: [], total_count: 0, page: 0, per_page: 50, total_pages: 0, has_next: false, has_prev: false };
@@ -336,7 +336,7 @@ class RustBridge {
     try {
       console.log(`🔍 Searching memories for user ${userId} with query "${query}"`);
 
-      const result = this.rustLib.mindcache_search(
+      const result = this.rustLib.memex_search(
         this.handle,
         userId,
         query,
@@ -365,7 +365,7 @@ class RustBridge {
     this.ensureInitialized();
 
     try {
-      const result = this.rustLib.mindcache_get_memory(this.handle, memoryId);
+      const result = this.rustLib.memex_get_memory(this.handle, memoryId);
 
       if (!result) {
         return null;
@@ -388,7 +388,7 @@ class RustBridge {
     try {
       const updatesJson = JSON.stringify(updates);
 
-      const success = this.rustLib.mindcache_update_memory(
+      const success = this.rustLib.memex_update_memory(
         this.handle,
         memoryId,
         updatesJson
@@ -413,7 +413,7 @@ class RustBridge {
     this.ensureInitialized();
 
     try {
-      const success = this.rustLib.mindcache_delete_memory(this.handle, memoryId);
+      const success = this.rustLib.memex_delete_memory(this.handle, memoryId);
 
       if (!success) {
         throw new Error('Memory not found');
@@ -436,7 +436,7 @@ class RustBridge {
     try {
       console.log(`📁 Creating session for user ${userId}`);
 
-      const result = this.rustLib.mindcache_create_session(
+      const result = this.rustLib.memex_create_session(
         this.handle,
         userId,
         name
@@ -463,7 +463,7 @@ class RustBridge {
     try {
       console.log(`📁 Getting sessions for user ${userId}`);
 
-      const result = this.rustLib.mindcache_get_user_sessions(
+      const result = this.rustLib.memex_get_user_sessions(
         this.handle,
         userId,
         limit,
@@ -493,7 +493,7 @@ class RustBridge {
     try {
       console.log(`📋 Generating summary for session ${sessionId}`);
 
-      const result = this.rustLib.mindcache_summarize_session(this.handle, sessionId);
+      const result = this.rustLib.memex_summarize_session(this.handle, sessionId);
 
       if (!result) {
         throw new Error('No summary generated');
@@ -520,7 +520,7 @@ class RustBridge {
 
       console.log(`🔍 Searching sessions for user ${userId} with keywords:`, keywords);
 
-      const result = this.rustLib.mindcache_search_sessions(
+      const result = this.rustLib.memex_search_sessions(
         this.handle,
         userId,
         keywordsJson
@@ -547,7 +547,7 @@ class RustBridge {
     this.ensureInitialized();
 
     try {
-      const success = this.rustLib.mindcache_delete_session(
+      const success = this.rustLib.memex_delete_session(
         this.handle,
         sessionId,
         deleteMemories
@@ -574,7 +574,7 @@ class RustBridge {
     try {
       console.log('🧹 Running memory decay process');
 
-      const result = this.rustLib.mindcache_decay(this.handle);
+      const result = this.rustLib.memex_decay(this.handle);
 
       if (!result) {
         throw new Error('No decay stats returned');
@@ -599,7 +599,7 @@ class RustBridge {
     try {
       console.log('📊 Analyzing decay recommendations');
 
-      const result = this.rustLib.mindcache_decay_analyze(this.handle);
+      const result = this.rustLib.memex_decay_analyze(this.handle);
 
       if (!result) {
         throw new Error('No decay analysis returned');
@@ -624,7 +624,7 @@ class RustBridge {
     try {
       console.log('📊 Getting system statistics');
 
-      const result = this.rustLib.mindcache_get_stats(this.handle);
+      const result = this.rustLib.memex_get_stats(this.handle);
 
       if (!result) {
         return {};
@@ -649,7 +649,7 @@ class RustBridge {
     try {
       console.log(`📤 Exporting memories for user ${userId}`);
 
-      const result = this.rustLib.mindcache_export_user_memories(this.handle, userId);
+      const result = this.rustLib.memex_export_user_memories(this.handle, userId);
 
       if (!result) {
         return '[]';
@@ -672,7 +672,7 @@ class RustBridge {
     try {
       console.log(`📊 Getting statistics for user ${userId}`);
 
-      const result = this.rustLib.mindcache_get_user_stats(this.handle, userId);
+      const result = this.rustLib.memex_get_user_stats(this.handle, userId);
 
       if (!result) {
         return null;
@@ -697,7 +697,7 @@ class RustBridge {
     try {
       console.log(`📊 Getting session analytics for user ${userId}`);
 
-      const result = this.rustLib.mindcache_get_session_analytics(this.handle, userId);
+      const result = this.rustLib.memex_get_session_analytics(this.handle, userId);
 
       if (!result) {
         return null;
@@ -722,7 +722,7 @@ class RustBridge {
     }
 
     try {
-      const version = this.rustLib.mindcache_version();
+      const version = this.rustLib.memex_version();
       return version || 'unknown';
     } catch (error) {
       return 'unknown';
@@ -745,7 +745,7 @@ class RustBridge {
     try {
       if (this.handle && this.handle !== 0) {
         console.log('🧹 Cleaning up Rust bridge...');
-        this.rustLib.mindcache_destroy(this.handle);
+        this.rustLib.memex_destroy(this.handle);
         this.handle = 0;
       }
 
@@ -766,7 +766,7 @@ class RustBridge {
       }
 
       // Verify handle is still valid
-      if (!this.rustLib.mindcache_is_valid(this.handle)) {
+      if (!this.rustLib.memex_is_valid(this.handle)) {
         return { status: 'invalid_handle' };
       }
 

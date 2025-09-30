@@ -292,7 +292,7 @@ fn is_stop_word(word: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::MindCacheConfig;
+    use crate::core::MemexConfig;
     use crate::database::async_db::AsyncDatabase;
     use tempfile::TempDir;
 
@@ -302,7 +302,7 @@ mod tests {
         let database = AsyncDatabase::new(&db_path.to_string_lossy())
             .await
             .unwrap();
-        let config = MindCacheConfig::default();
+        let config = MemexConfig::default();
         let validator = RequestValidator::new(&config);
 
         AsyncSessionManager::new(database, validator)

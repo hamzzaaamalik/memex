@@ -1,6 +1,6 @@
-# MindCache CLI
+# Memex CLI
 
-A powerful command-line interface for MindCache, enabling developers to interact with the memory engine directly from the terminal.
+A powerful command-line interface for Memex, enabling developers to interact with the memory engine directly from the terminal.
 
 ## 🚀 Installation
 
@@ -8,7 +8,7 @@ A powerful command-line interface for MindCache, enabling developers to interact
 
 ```bash
 # Install globally via npm
-npm install -g mindcache-cli
+npm install -g memex-cli
 
 # Or link for development
 npm link

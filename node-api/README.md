@@ -1,6 +1,6 @@
-# MindCache Node.js API
+# Memex Node.js API
 
-A high-performance REST API server for MindCache, providing HTTP endpoints to interact with the Rust-powered memory engine.
+A high-performance REST API server for Memex, providing HTTP endpoints to interact with the Rust-powered memory engine.
 
 ## 🚀 Quick Start
 

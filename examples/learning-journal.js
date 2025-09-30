@@ -1,9 +1,9 @@
-const { MindCacheSDK } = require('../sdk');
+const { MemexSDK } = require('../sdk');
 
 class LearningJournal {
     constructor(studentId) {
         this.studentId = studentId;
-        this.mindcache = new MindCacheSDK({
+        this.memex = new MemexSDK({
             baseUrl: 'http://localhost:3000'
         });
     }
@@ -11,7 +11,7 @@ class LearningJournal {
     async logLearning(subject, content, difficulty = 0.5) {
         const importance = this.calculateImportance(difficulty, content);
         
-        const memory = await this.mindcache.saveMemory({
+        const memory = await this.memex.saveMemory({
             userId: this.studentId,
             sessionId: `study_${subject.toLowerCase().replace(/\s+/g, '_')}`,
             content,
@@ -43,7 +43,7 @@ class LearningJournal {
     }
     
     async reviewSubject(subject) {
-        const memories = await this.mindcache.recallMemories({
+        const memories = await this.memex.recallMemories({
             userId: this.studentId,
             query: subject,
             limit: 10
@@ -63,7 +63,7 @@ class LearningJournal {
     
     async getWeakAreas() {
         // Find topics with high difficulty but low understanding
-        const allMemories = await this.mindcache.getAllMemories(this.studentId, 100);
+        const allMemories = await this.memex.getAllMemories(this.studentId, 100);
         
         const subjectStats = {};
         

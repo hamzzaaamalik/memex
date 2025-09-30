@@ -27,15 +27,15 @@ const NODE_ENV = process.env.NODE_ENV || 'development'
 let rustBridge
 
 /**
- * Initialize the MindCache server
+ * Initialize the Memex server
  */
 async function initializeServer () {
   try {
-    console.log('🧠 Initializing MindCache Node.js API Server...')
+    console.log('🧠 Initializing Memex Node.js API Server...')
 
     // Initialize Rust bridge
     const config = {
-      storage_path: process.env.MINDCACHE_STORAGE_PATH || './mindcache_data',
+      storage_path: process.env.MEMEX_STORAGE_PATH || './memex_data',
       auto_decay_enabled: process.env.AUTO_DECAY_ENABLED !== 'false',
       decay_interval_hours: parseInt(process.env.DECAY_INTERVAL_HOURS) || 24,
       default_memory_ttl_hours: parseInt(process.env.DEFAULT_TTL_HOURS) || 720, // 30 days
@@ -61,7 +61,7 @@ async function initializeServer () {
 
     return true
   } catch (error) {
-    console.error('❌ Failed to initialize MindCache server:', error)
+    console.error('❌ Failed to initialize Memex server:', error)
     process.exit(1)
   }
 }
@@ -170,7 +170,7 @@ function configureRoutes () {
   // API documentation endpoint
   app.get('/api', (req, res) => {
     res.json({
-      name: 'MindCache API',
+      name: 'Memex API',
       version: '1.0.0',
       description: 'A lightweight, local-first memory engine for AI applications',
       endpoints: {
@@ -220,7 +220,7 @@ function configureRoutes () {
   // Root route
   app.get('/', (req, res) => {
     res.json({
-      message: 'Welcome to MindCache API',
+      message: 'Welcome to Memex API',
       version: '1.0.0',
       documentation: '/api',
       health: '/health'
@@ -301,11 +301,11 @@ async function startServer () {
 
     // Start HTTP server
     const server = app.listen(PORT, () => {
-      console.log(`🚀 MindCache API Server running on port ${PORT}`)
+      console.log(`🚀 Memex API Server running on port ${PORT}`)
       console.log(`📊 Environment: ${NODE_ENV}`)
       console.log(`🌐 Health check: http://localhost:${PORT}/health`)
       console.log(`📖 API docs: http://localhost:${PORT}/api`)
-      console.log('🧠 MindCache ready for connections!')
+      console.log('🧠 Memex ready for connections!')
     })
 
     // Store server reference for graceful shutdown

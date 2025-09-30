@@ -1,7 +1,7 @@
 {
-  "name": "mindcache-api",
+  "name": "memex-api",
   "version": "1.0.0",
-  "description": "Node.js REST API server for MindCache - A lightweight, local-first memory engine for AI applications",
+  "description": "Node.js REST API server for Memex - A lightweight, local-first memory engine for AI applications",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -14,8 +14,8 @@
     "build": "echo 'Building Rust core...' && cd ../rust-core && cargo build --release",
     "build:debug": "echo 'Building Rust core (debug)...' && cd ../rust-core && cargo build",
     "prebuild": "npm run lint",
-    "docker:build": "docker build -t mindcache-api .",
-    "docker:run": "docker run -p 3000:3000 mindcache-api",
+    "docker:build": "docker build -t memex-api .",
+    "docker:run": "docker run -p 3000:3000 memex-api",
     "docs": "jsdoc -c jsdoc.conf.json",
     "clean": "rm -rf node_modules coverage docs/generated",
     "health": "curl -f http://localhost:3000/health || exit 1",
@@ -34,20 +34,20 @@
     "express"
   ],
   "author": {
-    "name": "MindCache Team",
-    "email": "team@mindcache.dev",
-    "url": "https://mindcache.dev"
+    "name": "Memex Team",
+    "email": "team@memex.dev",
+    "url": "https://memex.dev"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/hamzzaaamalik/mindcache.git",
+    "url": "https://github.com/hamzzaaamalik/memex.git",
     "directory": "node-api"
   },
   "bugs": {
-    "url": "https://github.com/hamzzaaamalik/mindcache/issues"
+    "url": "https://github.com/hamzzaaamalik/memex/issues"
   },
-  "homepage": "https://mindcache.dev",
+  "homepage": "https://memex.dev",
   "engines": {
     "node": ">=16.0.0",
     "npm": ">=8.0.0"

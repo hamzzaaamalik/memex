@@ -1,4 +1,4 @@
-//! Data models for MindCache database
+//! Data models for Memex database
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};

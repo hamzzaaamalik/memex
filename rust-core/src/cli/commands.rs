@@ -669,7 +669,7 @@ impl DatabaseMaintenanceCommands {
                 let backup_path = InteractiveCli::prompt_text(
                     "Backup file path",
                     Some(&format!(
-                        "mindcache_backup_{}.db",
+                        "memex_backup_{}.db",
                         chrono::Utc::now().format("%Y%m%d_%H%M%S")
                     )),
                 )?;
@@ -698,9 +698,9 @@ impl DatabaseMaintenanceCommands {
             2 => {
                 println!("📋 Available backups:");
                 // List backup files logic would go here
-                println!("  mindcache_backup_20241201_120000.db (2.5 MB)");
-                println!("  mindcache_backup_20241130_120000.db (2.3 MB)");
-                println!("  mindcache_backup_20241129_120000.db (2.1 MB)");
+                println!("  memex_backup_20241201_120000.db (2.5 MB)");
+                println!("  memex_backup_20241130_120000.db (2.3 MB)");
+                println!("  memex_backup_20241129_120000.db (2.1 MB)");
             }
             3 => {
                 let backup_path = InteractiveCli::prompt_text("Backup file path to verify", None)?;
@@ -712,7 +712,7 @@ impl DatabaseMaintenanceCommands {
             4 => {
                 println!("⏰ Automatic backup scheduling not implemented");
                 println!("Consider using cron or system scheduler to run:");
-                println!("  mindcache database backup /path/to/backup.db");
+                println!("  memex database backup /path/to/backup.db");
             }
             5 => {} // Exit
             _ => {}

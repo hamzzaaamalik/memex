@@ -1,4 +1,4 @@
-//! MindCache CLI binary with enhanced features
+//! Memex CLI binary with enhanced features
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
@@ -6,29 +6,29 @@ use colored::*;
 use std::collections::HashMap;
 use std::io::{self, Write};
 
-use mindcache_core::database::{Database, DatabaseConfig};
-use mindcache_core::database::vector::{VectorConfig, VectorSearchEngine};
-use mindcache_core::core::{MindCacheConfig, RequestValidator};
-use mindcache_core::core::memory::MemoryManager;
-use mindcache_core::core::session::SessionManager;
-use mindcache_core::core::decay::DecayEngine;
-use mindcache_core::database::models::*;
+use memex_core::database::{Database, DatabaseConfig};
+use memex_core::database::vector::{VectorConfig, VectorSearchEngine};
+use memex_core::core::{MemexConfig, RequestValidator};
+use memex_core::core::memory::MemoryManager;
+use memex_core::core::session::SessionManager;
+use memex_core::core::decay::DecayEngine;
+use memex_core::database::models::*;
 
 #[cfg(feature = "async")]
-use mindcache_core::database::async_db::AsyncDatabase;
+use memex_core::database::async_db::AsyncDatabase;
 #[cfg(feature = "async")]
-use mindcache_core::core::async_memory::AsyncMemoryManager;
+use memex_core::core::async_memory::AsyncMemoryManager;
 
 #[derive(Parser)]
-#[command(name = "mindcache")]
+#[command(name = "memex")]
 #[command(about = "A lightweight, local-first memory engine for AI applications with vector search")]
 #[command(version)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
-    
+
     /// Database path
-    #[arg(short, long, default_value = "mindcache.db")]
+    #[arg(short, long, default_value = "memex.db")]
     database: String,
     
     /// Enable verbose logging
@@ -411,18 +411,18 @@ fn main() -> Result<()> {
    }
 }
 
-fn load_config(cli: &Cli) -> Result<MindCacheConfig> {
+fn load_config(cli: &Cli) -> Result<MemexConfig> {
    if let Some(config_path) = &cli.config {
        let config_content = std::fs::read_to_string(config_path)
            .with_context(|| format!("Failed to read config file: {}", config_path))?;
-       
-       let config: MindCacheConfig = serde_json::from_str(&config_content)
+
+       let config: MemexConfig = serde_json::from_str(&config_content)
            .context("Failed to parse config file")?;
-       
+
        println!("{}", "✓ Loaded configuration from file".green());
        Ok(config)
    } else {
-       Ok(MindCacheConfig {
+       Ok(MemexConfig {
            database_path: cli.database.clone(),
            ..Default::default()
        })
@@ -764,7 +764,7 @@ fn handle_session_commands(action: SessionCommands, database: Database, validato
    Ok(())
 }
 
-fn handle_decay_commands(action: DecayCommands, database: Database, validator: RequestValidator, config: &MindCacheConfig) -> Result<()> {
+fn handle_decay_commands(action: DecayCommands, database: Database, validator: RequestValidator, config: &MemexConfig) -> Result<()> {
    let policy = DecayPolicy {
        max_age_hours: config.default_memory_ttl_hours.unwrap_or(24 * 30),
        importance_threshold: config.importance_threshold,
@@ -954,7 +954,7 @@ fn handle_database_commands(action: DatabaseCommands, database: Database) -> Res
    Ok(())
 }
 
-fn handle_system_commands(action: SystemCommands, database: Database, config: &MindCacheConfig) -> Result<()> {
+fn handle_system_commands(action: SystemCommands, database: Database, config: &MemexConfig) -> Result<()> {
    match action {
        SystemCommands::Health => {
            println!("{}", "🏥 System Health Check".green().bold());
@@ -1112,10 +1112,10 @@ mod tests {
        
        // Test basic memory save command
        let args = vec![
-           "mindcache",
+           "memex",
            "memory", "save",
            "--user", "test_user",
-           "--session", "test_session", 
+           "--session", "test_session",
            "Test content"
        ];
        

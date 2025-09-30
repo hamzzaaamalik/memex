@@ -2,12 +2,12 @@
  * Simple Performance Test Runner
  *
  * This script demonstrates realistic search performance scenarios
- * that would occur with millions of records in MindCache.
+ * that would occur with millions of records in Memex.
  */
 
 const http = require('http');
 
-class SimpleMindCacheTest {
+class SimpleMemexTest {
     constructor() {
         this.baseUrl = 'http://localhost:3000';
         this.results = [];
@@ -52,10 +52,10 @@ class SimpleMindCacheTest {
     async testConnection() {
         try {
             const health = await this.makeRequest('GET', '/health');
-            console.log('✅ MindCache server is running');
+            console.log('✅ Memex server is running');
             return true;
         } catch (error) {
-            console.log('❌ MindCache server is not accessible');
+            console.log('❌ Memex server is not accessible');
             console.log('Please start the server with: cd node-api && npm start');
             return false;
         }
@@ -340,7 +340,7 @@ class SimpleMindCacheTest {
 
     // Main test runner
     async run() {
-        console.log('🧠 MindCache Search Performance Test');
+        console.log('🧠 Memex Search Performance Test');
         console.log('====================================\n');
 
         // Check server connection
@@ -375,14 +375,14 @@ class SimpleMindCacheTest {
 
         console.log('\n✅ Performance test completed!');
         console.log('\nThis test simulates real-world search scenarios.');
-        console.log('Results show MindCache can handle millions of records efficiently.');
+        console.log('Results show Memex can handle millions of records efficiently.');
     }
 }
 
 // Run the test
 if (require.main === module) {
-    const test = new SimpleMindCacheTest();
+    const test = new SimpleMemexTest();
     test.run().catch(console.error);
 }
 
-module.exports = SimpleMindCacheTest;
+module.exports = SimpleMemexTest;

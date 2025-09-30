@@ -1,6 +1,6 @@
-# MindCache
+# Memex
 
-**MindCache** is a high-performance, local-first memory engine built for AI applications, chatbots, and intelligent agents. It combines a **Rust-powered core** with a **Node.js REST API** to deliver ultra-fast memory operations, intelligent decay, and seamless integration for modern AI workflows.
+**Memex** is a high-performance, local-first memory engine built for AI applications, chatbots, and intelligent agents. It combines a **Rust-powered core** with a **Node.js REST API** to deliver ultra-fast memory operations, intelligent decay, and seamless integration for modern AI workflows.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/Rust-Core-orange)](rust-core/)
@@ -12,13 +12,13 @@
 
 ---
 
-## Why MindCache?
+## Why Memex?
 
-> **MindCache = Redis for AI memory. Local-first, Rust-fast, Node.js-simple.**
+> **Memex = Redis for AI memory. Local-first, Rust-fast, Node.js-simple.**
 >
 > **Designed for LLMs, chatbots, and AI agents that need real memory, not just token context.**
 
-Modern AI applications need persistent, contextual memory that can scale efficiently. MindCache provides:
+Modern AI applications need persistent, contextual memory that can scale efficiently. Memex provides:
 
 **Persistent Memory**: Remember context across sessions and interactions
 **Ultra-Fast Performance**: Rust-powered core with optimized storage
@@ -35,7 +35,7 @@ Modern AI applications need persistent, contextual memory that can scale efficie
 
 ## Architecture
 
-MindCache follows a modular architecture with clear separation between the high-performance core and application interfaces:
+Memex follows a modular architecture with clear separation between the high-performance core and application interfaces:
 
 ```
 ┌─────────────────────────────────────────────────────────────────  ┐
@@ -123,19 +123,19 @@ MindCache follows a modular architecture with clear separation between the high-
 
 ---
 
-## How MindCache Compares
+## How Memex Compares
 
-MindCache fills a unique gap in the AI infrastructure landscape:
+Memex fills a unique gap in the AI infrastructure landscape:
 
 | Solution | Speed | Persistence | AI-Optimized | Local-First | Semantic Search | Complexity |
 |----------|-------|-------------|--------------|-------------|-----------------|------------|
-| **MindCache** | **Rust-fast** | **Persistent** | **Built for AI** | **Local** | **FTS5** | **Simple** |
+| **Memex** | **Rust-fast** | **Persistent** | **Built for AI** | **Local** | **FTS5** | **Simple** |
 | 🔴 Redis | Very Fast | Volatile | ❌ Generic KV | ✅ Local | ❌ No | Simple |
 | 🟠 Pinecone/Weaviate | Fast | Persistent | ✅ Vectors | ❌ SaaS | ✅ Vector | Complex |
 | 🟡 SQLite/Postgres | Fast | Persistent | ❌ General DB | ✅ Local | ⚠️ Basic | Medium |
 | 🟣 Elasticsearch | Medium | Persistent | ❌ Search Engine | ✅ Local | ✅ Advanced | Complex |
 
-### 🎯 **Why Choose MindCache?**
+### 🎯 **Why Choose Memex?**
 
 **vs Redis:**
 - **Persistent memory** across restarts (Redis is volatile)
@@ -158,7 +158,7 @@ MindCache fills a unique gap in the AI infrastructure landscape:
 - **Memory-specific optimization** (built for conversation context, not web search)
 - **Lightweight deployment** (single binary vs cluster management)
 
-> **MindCache gives you Redis-level performance with persistent, AI-optimized memory management — without the complexity of enterprise search or the limitations of generic databases.**
+> **Memex gives you Redis-level performance with persistent, AI-optimized memory management — without the complexity of enterprise search or the limitations of generic databases.**
 
 ---
 
@@ -167,8 +167,8 @@ MindCache fills a unique gap in the AI infrastructure landscape:
 ### Clone and Setup
 
 ```bash
-git clone https://github.com/hamzzaaamalik/mindcache.git
-cd mindcache
+git clone https://github.com/hamzzaaamalik/memex.git
+cd memex
 ```
 
 ### Build the Rust Core
@@ -207,9 +207,9 @@ npm install
 npm link  # Install globally
 
 # Test CLI commands
-mindcache ping
-mindcache save --user "alice" --session "test" --content "Hello MindCache!"
-mindcache recall --user "alice" --query "hello"
+memex ping
+memex save --user "alice" --session "test" --content "Hello Memex!"
+memex recall --user "alice" --query "hello"
 ```
 
 ### **5-Minute AI Agent Example**
@@ -217,17 +217,17 @@ mindcache recall --user "alice" --query "hello"
 Here's a complete, runnable example showing how to build an AI agent with persistent memory:
 
 ```javascript
-const { MindCacheSDK } = require('../sdk');
+const { MemexSDK } = require('../sdk');
 
-// Initialize MindCache
-const mindcache = new MindCacheSDK({
+// Initialize Memex
+const memex = new MemexSDK({
   baseUrl: 'http://localhost:3000'
 });
 
 (async () => {
   try {
     // Create a session for this conversation
-    const session = await mindcache.createSession({
+    const session = await memex.createSession({
       userId: 'agent_001',
       name: 'Customer Support Chat',
       metadata: { channel: 'web', priority: 'high' }
@@ -237,7 +237,7 @@ const mindcache = new MindCacheSDK({
     console.log('Session created:', sessionId);
 
     // Save important context about the user
-    await mindcache.saveMemory({
+    await memex.saveMemory({
       userId: 'agent_001',
       sessionId,
       content: 'User prefers concise, technical answers with code examples',
@@ -246,7 +246,7 @@ const mindcache = new MindCacheSDK({
       metadata: { type: 'preference', source: 'user_profile' }
     });
 
-    await mindcache.saveMemory({
+    await memex.saveMemory({
       userId: 'agent_001',
       sessionId,
       content: 'User is working on a Node.js microservices project with Docker',
@@ -254,7 +254,7 @@ const mindcache = new MindCacheSDK({
       metadata: { type: 'context', topic: 'project_info' }
     });
 
-    await mindcache.saveMemory({
+    await memex.saveMemory({
       userId: 'agent_001',
       sessionId,
       content: 'User reported performance issues with database queries in production',
@@ -267,7 +267,7 @@ const mindcache = new MindCacheSDK({
     // Later, when the user asks a question, recall relevant context
     const userQuery = 'How can I optimize my application?';
 
-    const relevantContext = await mindcache.recallMemories({
+    const relevantContext = await memex.recallMemories({
       userId: 'agent_001',
       sessionId,
       query: 'performance optimization project',
@@ -297,8 +297,8 @@ const mindcache = new MindCacheSDK({
 
 **Run this example:**
 ```bash
-# Save as mindcache-example.js
-node mindcache-example.js
+# Save as memex-example.js
+node memex-example.js
 ```
 
 **Expected output:**
@@ -314,7 +314,7 @@ Relevant memories: 3
 AI Agent successfully used persistent memory for context-aware responses!
 ```
 
-> **This is what makes MindCache powerful**: Your AI remembers user preferences, project context, and conversation history across sessions — enabling truly personalized, context-aware interactions.
+> **This is what makes Memex powerful**: Your AI remembers user preferences, project context, and conversation history across sessions — enabling truly personalized, context-aware interactions.
 
 ---
 
@@ -399,7 +399,7 @@ Triggers cleanup of expired and low-importance memories.
 
 ## CLI Usage
 
-The MindCache CLI provides a convenient interface for terminal and scripting use:
+The Memex CLI provides a convenient interface for terminal and scripting use:
 
 ### Installation
 ```bash
@@ -411,32 +411,32 @@ npm install -g .  # or npm link for development
 
 ```bash
 # Test connection
-mindcache ping
+memex ping
 
 # Save a memory
-mindcache save \
+memex save \
   --user "alice" \
   --session "work_session" \
   --content "Remember to follow up on the API design review" \
   --importance 0.8
 
 # Recall memories
-mindcache recall \
+memex recall \
   --user "alice" \
   --query "API design" \
   --limit 5
 
 # Session management
-mindcache sessions \
+memex sessions \
   --user "alice" \
   --create \
   --name "Weekly Planning"
 
 # View statistics
-mindcache stats --user "alice"
+memex stats --user "alice"
 
 # Trigger memory decay
-mindcache decay
+memex decay
 ```
 
 ---
@@ -446,17 +446,17 @@ mindcache decay
 ### JavaScript/Node.js Integration
 
 ```javascript
-const { MindCacheSDK } = require('mindcache-sdk');
+const { MemexSDK } = require('memex-sdk');
 
 // Initialize SDK
-const mindcache = new MindCacheSDK({
+const memex = new MemexSDK({
   baseUrl: 'http://localhost:3000',
   timeout: 5000,
   debug: false
 });
 
 // Save memories
-const memory = await mindcache.saveMemory({
+const memory = await memex.saveMemory({
   userId: 'agent_001',
   sessionId: 'conversation_123',
   content: 'User prefers concise responses and technical details',
@@ -466,7 +466,7 @@ const memory = await mindcache.saveMemory({
 });
 
 // Recall relevant context
-const context = await mindcache.recallMemories({
+const context = await memex.recallMemories({
   userId: 'agent_001',
   query: 'user communication preference',
   limit: 5,
@@ -474,7 +474,7 @@ const context = await mindcache.recallMemories({
 });
 
 // Session management
-const session = await mindcache.createSession({
+const session = await memex.createSession({
   userId: 'agent_001',
   name: 'Customer Support Chat',
   metadata: { channel: 'website', priority: 'high' }
@@ -487,12 +487,12 @@ const session = await mindcache.createSession({
 class IntelligentAssistant {
   constructor(agentId) {
     this.agentId = agentId;
-    this.mindcache = new MindCacheSDK();
+    this.memex = new MemexSDK();
     this.currentSession = null;
   }
 
   async startConversation(topic) {
-    this.currentSession = await this.mindcache.createSession({
+    this.currentSession = await this.memex.createSession({
       userId: this.agentId,
       name: `Discussion: ${topic}`,
       metadata: { topic, startedAt: new Date().toISOString() }
@@ -501,7 +501,7 @@ class IntelligentAssistant {
 
   async processUserMessage(message) {
     // Save the user's message
-    await this.mindcache.saveMemory({
+    await this.memex.saveMemory({
       userId: this.agentId,
       sessionId: this.currentSession.sessionId,
       content: `User said: ${message}`,
@@ -509,7 +509,7 @@ class IntelligentAssistant {
     });
 
     // Recall relevant context
-    const context = await this.mindcache.recallMemories({
+    const context = await this.memex.recallMemories({
       userId: this.agentId,
       query: message,
       limit: 5
@@ -519,7 +519,7 @@ class IntelligentAssistant {
     const response = this.generateResponse(message, context.data);
 
     // Remember our response
-    await this.mindcache.saveMemory({
+    await this.memex.saveMemory({
       userId: this.agentId,
       sessionId: this.currentSession.sessionId,
       content: `Assistant responded: ${response}`,
@@ -585,7 +585,7 @@ node sdk-playground.js
 ### Running Performance Tests
 
 ```bash
-# Start the MindCache API server
+# Start the Memex API server
 cd node-api && npm start
 
 # In another terminal, run performance tests
@@ -607,15 +607,15 @@ node run_test.js
 docker-compose up -d
 
 # Or manually
-docker build -t mindcache .
-docker run -p 3000:3000 -v $(pwd)/data:/app/data mindcache
+docker build -t memex .
+docker run -p 3000:3000 -v $(pwd)/data:/app/data memex
 ```
 
 **docker-compose.yml:**
 ```yaml
 version: '3.8'
 services:
-  mindcache:
+  memex:
     build: .
     ports:
       - "3000:3000"
@@ -623,7 +623,7 @@ services:
       - ./data:/app/data
     environment:
       - NODE_ENV=production
-      - MINDCACHE_STORAGE_PATH=/app/data
+      - MEMEX_STORAGE_PATH=/app/data
       - AUTO_DECAY_ENABLED=true
       - DECAY_INTERVAL_HOURS=24
     restart: unless-stopped
@@ -637,7 +637,7 @@ npm install -g pm2
 
 # Start with PM2
 cd node-api
-pm2 start index.js --name mindcache-api
+pm2 start index.js --name memex-api
 
 # Set up auto-restart on system boot
 pm2 save
@@ -650,20 +650,20 @@ pm2 startup
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mindcache-deployment
+  name: memex-deployment
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: mindcache
+      app: memex
   template:
     metadata:
       labels:
-        app: mindcache
+        app: memex
     spec:
       containers:
-      - name: mindcache
-        image: mindcache:latest
+      - name: memex
+        image: memex:latest
         ports:
         - containerPort: 3000
         env:
@@ -675,7 +675,7 @@ spec:
       volumes:
       - name: storage
         persistentVolumeClaim:
-          claimName: mindcache-storage
+          claimName: memex-storage
 ```
 
 ### Environment Configuration
@@ -688,8 +688,8 @@ NODE_ENV=production
 PORT=3000
 HOST=0.0.0.0
 
-# MindCache Settings
-MINDCACHE_STORAGE_PATH=./mindcache_data
+# Memex Settings
+MEMEX_STORAGE_PATH=./memex_data
 AUTO_DECAY_ENABLED=true
 DECAY_INTERVAL_HOURS=24
 DEFAULT_TTL_HOURS=720
@@ -724,7 +724,7 @@ curl http://localhost:3000/api/stats
 
 ### Logging
 
-MindCache uses structured logging with configurable levels:
+Memex uses structured logging with configurable levels:
 
 ```javascript
 // In your application
@@ -734,7 +734,7 @@ const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.json(),
   transports: [
-    new winston.transports.File({ filename: 'mindcache.log' }),
+    new winston.transports.File({ filename: 'memex.log' }),
     new winston.transports.Console()
   ]
 });
@@ -777,7 +777,7 @@ Enable debug logging for troubleshooting:
 
 ```bash
 # Environment variable
-DEBUG=mindcache* npm start
+DEBUG=memex* npm start
 
 # Or in .env file
 LOG_LEVEL=debug
@@ -794,21 +794,21 @@ curl http://localhost:3000/api/stats
 curl -X DELETE http://localhost:3000/api/memory/decay
 
 # Monitor database size
-du -h ./mindcache_data/
+du -h ./memex_data/
 ```
 
 ---
 
 ## Contributing
 
-We welcome contributions! MindCache is built with modern tools and follows best practices.
+We welcome contributions! Memex is built with modern tools and follows best practices.
 
 ### Development Setup
 
 ```bash
 # Clone repository
-git clone https://github.com/hamzzaaamalik/mindcache.git
-cd mindcache
+git clone https://github.com/hamzzaaamalik/memex.git
+cd memex
 
 # Build Rust core
 cd rust-core
@@ -897,7 +897,7 @@ npm test
 - **Temporal Memory Analytics**: Time-travel debugging, memory versioning, and causal relationship mapping
 - **Quantum-Ready Architecture**: Future-proofed design for quantum-enhanced AI memory operations
 
-> **Vision**: By 2026, MindCache will power the memory layer for millions of AI agents worldwide, creating the first truly decentralized, intelligent memory network that enables AI systems to learn, remember, and collaborate at planetary scale.
+> **Vision**: By 2026, Memex will power the memory layer for millions of AI agents worldwide, creating the first truly decentralized, intelligent memory network that enables AI systems to learn, remember, and collaborate at planetary scale.
 
 **Join us in building the memory infrastructure that will power the next generation of AI.**
 
@@ -907,7 +907,7 @@ npm test
 
 **MIT License** - See [LICENSE](LICENSE) file for details.
 
-MindCache is open source and free to use in both personal and commercial projects.
+Memex is open source and free to use in both personal and commercial projects.
 
 ---
 
@@ -921,16 +921,16 @@ MindCache is open source and free to use in both personal and commercial project
 
 ### 🤝 Community & Support
 
-- **GitHub Issues**: [Report bugs and request features](https://github.com/hamzzaaamalik/mindcache/issues)
-- **Discussions**: [Community discussions and Q&A](https://github.com/hamzzaaamalik/mindcache/discussions)
+- **GitHub Issues**: [Report bugs and request features](https://github.com/hamzzaaamalik/memex/issues)
+- **Discussions**: [Community discussions and Q&A](https://github.com/hamzzaaamalik/memex/discussions)
 - **Documentation**: [Comprehensive guides and examples](docs/)
 
 ### Project Stats
 
-![GitHub stars](https://img.shields.io/github/stars/hamzzaaamalik/mindcache)
-![GitHub forks](https://img.shields.io/github/forks/hamzzaaamalik/mindcache)
-![GitHub issues](https://img.shields.io/github/issues/hamzzaaamalik/mindcache)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/hamzzaaamalik/mindcache)
+![GitHub stars](https://img.shields.io/github/stars/hamzzaaamalik/memex)
+![GitHub forks](https://img.shields.io/github/forks/hamzzaaamalik/memex)
+![GitHub issues](https://img.shields.io/github/issues/hamzzaaamalik/memex)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/hamzzaaamalik/memex)
 
 ---
 

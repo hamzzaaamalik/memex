@@ -1,4 +1,4 @@
-const { MindCacheSDK } = require('../sdk');
+const { MemexSDK } = require('../sdk');
 const readline = require('readline');
 
 const rl = readline.createInterface({
@@ -6,7 +6,7 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
-const mindcache = new MindCacheSDK({
+const memex = new MemexSDK({
     baseUrl: 'http://localhost:3000',
     debug: true
 });
@@ -18,7 +18,7 @@ function prompt(question) {
 }
 
 async function sdkPlayground() {
-    console.log('🧠 MindCache SDK Playground\n');
+    console.log('🧠 Memex SDK Playground\n');
     console.log('Available commands:');
     console.log('1. save - Save a memory');
     console.log('2. recall - Recall memories');
@@ -99,7 +99,7 @@ async function handleSave() {
     const content = await prompt('Memory content: ');
     const importance = parseFloat(await prompt('Importance (0-1, default 0.5): ') || '0.5');
     
-    const result = await mindcache.saveMemory({
+    const result = await memex.saveMemory({
         userId,
         sessionId,
         content,
@@ -114,7 +114,7 @@ async function handleRecall() {
     const query = await prompt('Search query (optional): ');
     const limit = parseInt(await prompt('Limit (default 10): ') || '10');
     
-    const result = await mindcache.recallMemories({
+    const result = await memex.recallMemories({
         userId,
         query: query || undefined,
         limit
@@ -130,7 +130,7 @@ async function handleSearch() {
     const userId = await prompt('User ID: ');
     const searchText = await prompt('Search text: ');
     
-    const results = await mindcache.findMemories(userId, searchText);
+    const results = await memex.findMemories(userId, searchText);
     
     console.log(`🔍 Search results: ${results.data.memories.length} found`);
     results.data.memories.forEach((mem, i) => {
@@ -141,7 +141,7 @@ async function handleSearch() {
 async function handleSessions() {
     const userId = await prompt('User ID: ');
     
-    const sessions = await mindcache.getUserSessions(userId);
+    const sessions = await memex.getUserSessions(userId);
     
     console.log(`📁 Sessions for ${userId}: ${sessions.data.sessions.length}`);
     sessions.data.sessions.forEach((session, i) => {
@@ -150,14 +150,14 @@ async function handleSessions() {
 }
 
 async function handleStats() {
-    const stats = await mindcache.getSystemStats();
+    const stats = await memex.getSystemStats();
     console.log('📊 System Statistics:', JSON.stringify(stats.data, null, 2));
 }
 
 async function handleExport() {
     const userId = await prompt('User ID: ');
     
-    const exported = await mindcache.exportMemories(userId);
+    const exported = await memex.exportMemories(userId);
     console.log(`📤 Exported ${exported.data.memories.length} memories for ${userId}`);
 }
 
@@ -171,12 +171,12 @@ async function handleBulk() {
         { content: 'Bulk memory 3', importance: 0.8 }
     ].map(mem => ({ ...mem, userId, sessionId }));
     
-    const result = await mindcache.bulkSaveMemories(memories);
+    const result = await memex.bulkSaveMemories(memories);
     console.log('📦 Bulk save result:', result.data.summary);
 }
 
 async function handleHealth() {
-    const health = await mindcache.getHealth();
+    const health = await memex.getHealth();
     console.log('🏥 Health:', health.data.status);
 }
 

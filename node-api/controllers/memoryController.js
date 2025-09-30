@@ -164,7 +164,7 @@ const exportUserMemories = asyncHandler(async (req, res) => {
 
     // Set headers for file download
     res.setHeader('Content-Type', 'application/json')
-    res.setHeader('Content-Disposition', `attachment; filename="mindcache-export-${userId}-${Date.now()}.json"`)
+    res.setHeader('Content-Disposition', `attachment; filename="memex-export-${userId}-${Date.now()}.json"`)
 
     res.json({
       success: true,

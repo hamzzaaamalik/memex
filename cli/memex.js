@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * MindCache CLI - Command Line Interface
- * 
- * A developer-friendly CLI tool for testing and managing MindCache
+ * Memex CLI - Command Line Interface
+ *
+ * A developer-friendly CLI tool for testing and managing Memex
  * Supports all core operations with interactive prompts and formatting
  */
 
@@ -14,7 +14,7 @@ const ora = require('ora');
 const Table = require('cli-table3');
 const fs = require('fs');
 const path = require('path');
-const { MindCacheSDK } = require('../sdk');
+const { MemexSDK } = require('../sdk');
 
 // Package info
 const packageJson = require('./package.json');
@@ -34,14 +34,14 @@ let sdk = null;
  */
 function initializeSDK(options = {}) {
     const config = { ...DEFAULT_CONFIG, ...options };
-    
-    sdk = new MindCacheSDK({
+
+    sdk = new MemexSDK({
         baseUrl: config.baseUrl,
         apiKey: config.apiKey,
         timeout: config.timeout,
         debug: config.debug
     });
-    
+
     return sdk;
 }
 
@@ -91,8 +91,8 @@ function displaySuccess(message, data = null) {
  */
 
 program
-    .name('mindcache')
-    .description('MindCache CLI - Memory engine for AI applications')
+    .name('memex')
+    .description('Memex CLI - Memory engine for AI applications')
     .version(packageJson.version)
     .option('-u, --url <url>', 'API base URL', DEFAULT_CONFIG.baseUrl)
     .option('-k, --api-key <key>', 'API key for authentication')
@@ -571,7 +571,7 @@ program
                         type: 'input',
                         name: 'outputPath',
                         message: 'Output file path:',
-                        default: options.output || `mindcache-export-${Date.now()}.json`
+                        default: options.output || `memex-export-${Date.now()}.json`
                     }
                 ]);
                 
@@ -579,7 +579,7 @@ program
                 outputPath = answers.outputPath;
             } else {
                 userId = options.user;
-                outputPath = options.output || `mindcache-export-${userId}-${Date.now()}.json`;
+                outputPath = options.output || `memex-export-${userId}-${Date.now()}.json`;
             }
             
             const spinner = ora('Exporting memories...').start();
@@ -621,7 +621,7 @@ program
                 // Get basic info
                 const info = await sdk.getApiInfo();
                 console.log(chalk.blue('\nAPI Info:'));
-                console.log(`Name: ${info.name || 'MindCache API'}`);
+                console.log(`Name: ${info.name || 'Memex API'}`);
                 console.log(`Version: ${info.version || 'Unknown'}`);
                 console.log(`URL: ${sdk.baseUrl}`);
             } else {
@@ -644,8 +644,8 @@ program
     .action(async () => {
         try {
             sdk = initializeSDK(program.opts());
-            
-            console.log(chalk.blue('\n🧠 MindCache Interactive CLI\n'));
+
+            console.log(chalk.blue('\n🧠 Memex Interactive CLI\n'));
             console.log(chalk.gray(`Connected to: ${sdk.baseUrl}\n`));
             
             // Check API availability

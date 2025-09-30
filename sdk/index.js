@@ -1,11 +1,11 @@
 /**
- * MindCache JavaScript SDK
- * 
- * A lightweight client library for interacting with MindCache API
+ * Memex JavaScript SDK
+ *
+ * A lightweight client library for interacting with Memex API
  * Provides an easy-to-use interface for memory storage and retrieval
  */
 
-class MindCacheSDK {
+class MemexSDK {
     constructor(options = {}) {
         this.baseUrl = options.baseUrl || 'http://localhost:3000';
         this.apiKey = options.apiKey || null;
@@ -16,14 +16,14 @@ class MindCacheSDK {
         // Default headers
         this.defaultHeaders = {
             'Content-Type': 'application/json',
-            'User-Agent': 'MindCache-SDK/1.0.0'
+            'User-Agent': 'Memex-SDK/1.0.0'
         };
         
         if (this.apiKey) {
             this.defaultHeaders['X-API-Key'] = this.apiKey;
         }
         
-        this.log('🧠 MindCache SDK initialized', { baseUrl: this.baseUrl });
+        this.log('🧠 Memex SDK initialized', { baseUrl: this.baseUrl });
     }
 
     /**
@@ -424,7 +424,7 @@ class MindCacheSDK {
                         errorMessage = errorData || `HTTP ${response.status}`;
                     }
                     
-                    throw new MindCacheError(errorMessage, response.status, errorData);
+                    throw new MemexError(errorMessage, response.status, errorData);
                 }
                 
                 const responseData = await response.json();
@@ -473,7 +473,7 @@ class MindCacheSDK {
             return response;
         } catch (error) {
             if (error.name === 'AbortError') {
-                throw new MindCacheError(`Request timeout after ${this.timeout}ms`, 0);
+                throw new MemexError(`Request timeout after ${this.timeout}ms`, 0);
             }
             throw error;
         } finally {
@@ -489,9 +489,9 @@ class MindCacheSDK {
     log(message, data = null) {
         if (this.debug) {
             if (data) {
-                console.log(`[MindCache SDK] ${message}`, data);
+                console.log(`[Memex SDK] ${message}`, data);
             } else {
-                console.log(`[MindCache SDK] ${message}`);
+                console.log(`[Memex SDK] ${message}`);
             }
         }
     }
@@ -572,12 +572,12 @@ class MindCacheSDK {
 }
 
 /**
- * Custom Error Class for MindCache SDK
+ * Custom Error Class for Memex SDK
  */
-class MindCacheError extends Error {
+class MemexError extends Error {
     constructor(message, status = 0, response = null) {
         super(message);
-        this.name = 'MindCacheError';
+        this.name = 'MemexError';
         this.status = status;
         this.response = response;
     }
@@ -586,14 +586,14 @@ class MindCacheError extends Error {
 // Export for different environments
 if (typeof module !== 'undefined' && module.exports) {
     // Node.js
-    module.exports = { MindCacheSDK, MindCacheError };
+    module.exports = { MemexSDK, MemexError };
 } else if (typeof define === 'function' && define.amd) {
     // AMD
     define([], function() {
-        return { MindCacheSDK, MindCacheError };
+        return { MemexSDK, MemexError };
     });
 } else {
     // Browser global
-    window.MindCacheSDK = MindCacheSDK;
-    window.MindCacheError = MindCacheError;
+    window.MemexSDK = MemexSDK;
+    window.MemexError = MemexError;
 }

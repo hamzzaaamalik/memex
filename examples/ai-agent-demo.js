@@ -1,9 +1,9 @@
-const { MindCacheSDK } = require('../sdk');
+const { MemexSDK } = require('../sdk');
 
 class AIAgent {
     constructor(agentId) {
         this.agentId = agentId;
-        this.mindcache = new MindCacheSDK({
+        this.memex = new MemexSDK({
             baseUrl: 'http://localhost:3000',
             debug: true
         });
@@ -12,7 +12,7 @@ class AIAgent {
     
     async startConversation(topic) {
         // Create a new session for this conversation
-        const session = await this.mindcache.createSession({
+        const session = await this.memex.createSession({
             userId: this.agentId,
             name: `Conversation about ${topic}`,
             metadata: { topic, startTime: new Date().toISOString() }
@@ -28,7 +28,7 @@ class AIAgent {
             throw new Error('No active session. Start a conversation first.');
         }
         
-        const memory = await this.mindcache.saveMemory({
+        const memory = await this.memex.saveMemory({
             userId: this.agentId,
             sessionId: this.currentSession,
             content,
@@ -45,7 +45,7 @@ class AIAgent {
     }
     
     async recall(query, limit = 5) {
-        const memories = await this.mindcache.recallMemories({
+        const memories = await this.memex.recallMemories({
             userId: this.agentId,
             query,
             limit,
@@ -59,12 +59,12 @@ class AIAgent {
     async getContext(query) {
         // Get recent memories and relevant memories
         const [recent, relevant] = await Promise.all([
-            this.mindcache.recallMemories({
+            this.memex.recallMemories({
                 userId: this.agentId,
                 sessionId: this.currentSession,
                 limit: 3
             }),
-            this.mindcache.recallMemories({
+            this.memex.recallMemories({
                 userId: this.agentId,
                 query,
                 limit: 5,
@@ -81,7 +81,7 @@ class AIAgent {
     async summarizeConversation() {
         if (!this.currentSession) return null;
         
-        const summary = await this.mindcache.summarizeSession(this.currentSession);
+        const summary = await this.memex.summarizeSession(this.currentSession);
         console.log(`📋 Session summary generated`);
         return summary.data.summary;
     }

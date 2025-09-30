@@ -1,4 +1,4 @@
-//! MindCache Core Library
+//! Memex Core Library
 //!
 //! A high-performance memory management system with intelligent decay,
 //! full-text search, and session organization capabilities.
@@ -42,12 +42,12 @@ static INSTANCES: once_cell::sync::Lazy<Mutex<HashMap<usize, SimpleDatabase>>> =
     once_cell::sync::Lazy::new(|| Mutex::new(HashMap::new()));
 
 #[no_mangle]
-pub extern "C" fn mindcache_init() -> usize {
-    mindcache_init_with_config(ptr::null())
+pub extern "C" fn memex_init() -> usize {
+    memex_init_with_config(ptr::null())
 }
 
 #[no_mangle]
-pub extern "C" fn mindcache_init_with_config(config_json: *const c_char) -> usize {
+pub extern "C" fn memex_init_with_config(config_json: *const c_char) -> usize {
     let result = std::panic::catch_unwind(|| -> Option<usize> {
         // Parse config if provided, otherwise use default
         let config = if config_json.is_null() {
@@ -63,7 +63,7 @@ pub extern "C" fn mindcache_init_with_config(config_json: *const c_char) -> usiz
                 }
             };
 
-            let parsed_config: MindCacheConfig = match serde_json::from_str(config_str) {
+            let parsed_config: MemexConfig = match serde_json::from_str(config_str) {
                 Ok(config) => config,
                 Err(e) => {
                     eprintln!("Error parsing config JSON: {}", e);
@@ -106,14 +106,14 @@ pub extern "C" fn mindcache_init_with_config(config_json: *const c_char) -> usiz
         Ok(Some(id)) => id,
         Ok(None) => 0,
         Err(e) => {
-            eprintln!("Panic in mindcache_init_with_config: {:?}", e);
+            eprintln!("Panic in memex_init_with_config: {:?}", e);
             0
         }
     }
 }
 
 #[no_mangle]
-pub extern "C" fn mindcache_is_valid(handle: usize) -> bool {
+pub extern "C" fn memex_is_valid(handle: usize) -> bool {
     if handle == 0 {
         return false;
     }
@@ -122,7 +122,7 @@ pub extern "C" fn mindcache_is_valid(handle: usize) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn mindcache_destroy(handle: usize) {
+pub extern "C" fn memex_destroy(handle: usize) {
     if handle == 0 {
         return;
     }
@@ -132,7 +132,7 @@ pub extern "C" fn mindcache_destroy(handle: usize) {
 
 #[no_mangle]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
-pub extern "C" fn mindcache_save(
+pub extern "C" fn memex_save(
     handle: usize,
     user_id: *const c_char,
     session_id: *const c_char,
@@ -221,7 +221,7 @@ pub extern "C" fn mindcache_save(
 
 #[no_mangle]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
-pub extern "C" fn mindcache_get_memory(handle: usize, memory_id: *const c_char) -> *mut c_char {
+pub extern "C" fn memex_get_memory(handle: usize, memory_id: *const c_char) -> *mut c_char {
     let result = std::panic::catch_unwind(|| {
         if handle == 0 || memory_id.is_null() {
             return None;
@@ -248,7 +248,7 @@ pub extern "C" fn mindcache_get_memory(handle: usize, memory_id: *const c_char) 
 
 #[no_mangle]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
-pub extern "C" fn mindcache_recall(handle: usize, filter_json: *const c_char) -> *mut c_char {
+pub extern "C" fn memex_recall(handle: usize, filter_json: *const c_char) -> *mut c_char {
     let result = std::panic::catch_unwind(|| {
         if handle == 0 {
             return None;
@@ -294,12 +294,12 @@ pub extern "C" fn mindcache_recall(handle: usize, filter_json: *const c_char) ->
 }
 
 #[no_mangle]
-pub extern "C" fn mindcache_get_last_error() -> i32 {
+pub extern "C" fn memex_get_last_error() -> i32 {
     0 // No error for now - could implement error tracking later
 }
 
 #[no_mangle]
-pub extern "C" fn mindcache_error_message(error_code: i32) -> *mut c_char {
+pub extern "C" fn memex_error_message(error_code: i32) -> *mut c_char {
     let message = match error_code {
         0 => "Success",
         _ => "Unknown error",
@@ -313,7 +313,7 @@ pub extern "C" fn mindcache_error_message(error_code: i32) -> *mut c_char {
 
 #[no_mangle]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
-pub extern "C" fn mindcache_free_string(ptr: *mut c_char) {
+pub extern "C" fn memex_free_string(ptr: *mut c_char) {
     if !ptr.is_null() {
         unsafe {
             let _ = CString::from_raw(ptr);
@@ -322,7 +322,7 @@ pub extern "C" fn mindcache_free_string(ptr: *mut c_char) {
 }
 
 #[no_mangle]
-pub extern "C" fn mindcache_version() -> *mut c_char {
+pub extern "C" fn memex_version() -> *mut c_char {
     match CString::new(env!("CARGO_PKG_VERSION")) {
         Ok(cstring) => cstring.into_raw(),
         Err(_) => ptr::null_mut(),
@@ -331,11 +331,11 @@ pub extern "C" fn mindcache_version() -> *mut c_char {
 
 // Stub implementations for functions not yet implemented
 #[no_mangle]
-pub extern "C" fn mindcache_save_batch(_h: usize, _m: *const c_char, _f: bool) -> *mut c_char {
+pub extern "C" fn memex_save_batch(_h: usize, _m: *const c_char, _f: bool) -> *mut c_char {
     ptr::null_mut()
 }
 #[no_mangle]
-pub extern "C" fn mindcache_search(
+pub extern "C" fn memex_search(
     _h: usize,
     _u: *const c_char,
     _q: *const c_char,
@@ -345,15 +345,15 @@ pub extern "C" fn mindcache_search(
     ptr::null_mut()
 }
 #[no_mangle]
-pub extern "C" fn mindcache_update_memory(_h: usize, _m: *const c_char, _u: *const c_char) -> bool {
+pub extern "C" fn memex_update_memory(_h: usize, _m: *const c_char, _u: *const c_char) -> bool {
     false
 }
 #[no_mangle]
-pub extern "C" fn mindcache_delete_memory(_h: usize, _m: *const c_char) -> bool {
+pub extern "C" fn memex_delete_memory(_h: usize, _m: *const c_char) -> bool {
     false
 }
 #[no_mangle]
-pub extern "C" fn mindcache_create_session(
+pub extern "C" fn memex_create_session(
     _h: usize,
     _u: *const c_char,
     _n: *const c_char,
@@ -361,7 +361,7 @@ pub extern "C" fn mindcache_create_session(
     ptr::null_mut()
 }
 #[no_mangle]
-pub extern "C" fn mindcache_get_user_sessions(
+pub extern "C" fn memex_get_user_sessions(
     _h: usize,
     _u: *const c_char,
     _l: i32,
@@ -370,11 +370,11 @@ pub extern "C" fn mindcache_get_user_sessions(
     ptr::null_mut()
 }
 #[no_mangle]
-pub extern "C" fn mindcache_summarize_session(_h: usize, _s: *const c_char) -> *mut c_char {
+pub extern "C" fn memex_summarize_session(_h: usize, _s: *const c_char) -> *mut c_char {
     ptr::null_mut()
 }
 #[no_mangle]
-pub extern "C" fn mindcache_search_sessions(
+pub extern "C" fn memex_search_sessions(
     _h: usize,
     _u: *const c_char,
     _k: *const c_char,
@@ -382,35 +382,35 @@ pub extern "C" fn mindcache_search_sessions(
     ptr::null_mut()
 }
 #[no_mangle]
-pub extern "C" fn mindcache_delete_session(_h: usize, _s: *const c_char, _d: bool) -> bool {
+pub extern "C" fn memex_delete_session(_h: usize, _s: *const c_char, _d: bool) -> bool {
     false
 }
 #[no_mangle]
-pub extern "C" fn mindcache_decay(_h: usize) -> *mut c_char {
+pub extern "C" fn memex_decay(_h: usize) -> *mut c_char {
     ptr::null_mut()
 }
 #[no_mangle]
-pub extern "C" fn mindcache_decay_analyze(_h: usize) -> *mut c_char {
+pub extern "C" fn memex_decay_analyze(_h: usize) -> *mut c_char {
     ptr::null_mut()
 }
 #[no_mangle]
-pub extern "C" fn mindcache_update_decay_policy(_h: usize, _p: *const c_char) -> bool {
+pub extern "C" fn memex_update_decay_policy(_h: usize, _p: *const c_char) -> bool {
     false
 }
 #[no_mangle]
-pub extern "C" fn mindcache_get_stats(_h: usize) -> *mut c_char {
+pub extern "C" fn memex_get_stats(_h: usize) -> *mut c_char {
     ptr::null_mut()
 }
 #[no_mangle]
-pub extern "C" fn mindcache_export_user_memories(_h: usize, _u: *const c_char) -> *mut c_char {
+pub extern "C" fn memex_export_user_memories(_h: usize, _u: *const c_char) -> *mut c_char {
     ptr::null_mut()
 }
 #[no_mangle]
-pub extern "C" fn mindcache_get_user_stats(_h: usize, _u: *const c_char) -> *mut c_char {
+pub extern "C" fn memex_get_user_stats(_h: usize, _u: *const c_char) -> *mut c_char {
     ptr::null_mut()
 }
 #[no_mangle]
-pub extern "C" fn mindcache_get_session_analytics(_h: usize, _u: *const c_char) -> *mut c_char {
+pub extern "C" fn memex_get_session_analytics(_h: usize, _u: *const c_char) -> *mut c_char {
     ptr::null_mut()
 }
 
@@ -421,7 +421,7 @@ mod tests {
 
     #[test]
     fn test_basic_functionality() {
-        let config = MindCacheConfig::default();
+        let config = MemexConfig::default();
         assert!(config.validate().is_ok());
     }
 
@@ -433,9 +433,9 @@ mod tests {
 
     #[test]
     fn test_ffi_basic() {
-        let handle = mindcache_init();
+        let handle = memex_init();
         assert_ne!(handle, 0);
-        assert!(mindcache_is_valid(handle));
-        mindcache_destroy(handle);
+        assert!(memex_is_valid(handle));
+        memex_destroy(handle);
     }
 }

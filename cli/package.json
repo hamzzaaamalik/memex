@@ -1,22 +1,22 @@
 {
-  "name": "mindcache-cli",
+  "name": "memex-cli",
   "version": "1.0.0",
-  "description": "Command Line Interface for MindCache - Memory engine for AI applications",
-  "main": "mindcache.js",
+  "description": "Command Line Interface for Memex - Memory engine for AI applications",
+  "main": "memex.js",
   "bin": {
-    "mindcache": "./mindcache.js"
+    "memex": "./memex.js"
   },
   "scripts": {
-    "start": "node mindcache.js",
+    "start": "node memex.js",
     "test": "jest",
     "link": "npm link",
     "unlink": "npm unlink -g",
-    "build": "pkg mindcache.js --out-path dist/",
+    "build": "pkg memex.js --out-path dist/",
     "install-global": "npm install -g ."
   },
   "keywords": [
     "cli",
-    "mindcache",
+    "memex",
     "memory",
     "ai",
     "llm",
@@ -24,13 +24,13 @@
     "developer-tools"
   ],
   "author": {
-    "name": "MindCache Team",
-    "email": "team@mindcache.dev"
+    "name": "Memex Team",
+    "email": "team@memex.dev"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mindcache/mindcache.git",
+    "url": "https://github.com/memex/memex.git",
     "directory": "cli"
   },
   "engines": {
@@ -48,7 +48,7 @@
     "pkg": "^5.8.1"
   },
   "files": [
-    "mindcache.js",
+    "memex.js",
     "README.md"
   ],
   "preferGlobal": true

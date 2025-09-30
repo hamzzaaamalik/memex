@@ -22,7 +22,7 @@ const getSystemStats = asyncHandler(async (req, res) => {
     // Combine all statistics
     const stats = {
       system: systemStats,
-      mindcache: rustStats,
+      memex: rustStats,
       api: {
         uptime: process.uptime(),
         environment: process.env.NODE_ENV || 'development',

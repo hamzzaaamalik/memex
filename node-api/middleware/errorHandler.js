@@ -1,5 +1,5 @@
 /**
- * Global error handler middleware for MindCache API
+ * Global error handler middleware for Memex API
  */
 
 /**
