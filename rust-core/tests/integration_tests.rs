@@ -1,15 +1,15 @@
-//! Integration tests for MindCache
+//! Integration tests for Memex
 //!
 //! These tests verify that all components work together correctly
 //! and test realistic usage scenarios.
 
-use mindcache_core::core::decay::DecayEngine;
-use mindcache_core::core::memory::MemoryManager;
-use mindcache_core::core::session::SessionManager;
-use mindcache_core::core::{MindCacheConfig, RequestValidator};
-use mindcache_core::database::models::*;
-use mindcache_core::database::{Database, DatabaseConfig};
-use mindcache_core::*;
+use memex_core::core::decay::DecayEngine;
+use memex_core::core::memory::MemoryManager;
+use memex_core::core::session::SessionManager;
+use memex_core::core::{MemexConfig, RequestValidator};
+use memex_core::database::models::*;
+use memex_core::database::{Database, DatabaseConfig};
+use memex_core::*;
 use serial_test::serial;
 use std::collections::HashMap;
 use tempfile::TempDir;
@@ -18,14 +18,14 @@ struct TestEnvironment {
     memory_manager: MemoryManager,
     session_manager: SessionManager,
     decay_engine: DecayEngine,
-    config: MindCacheConfig,
+    config: MemexConfig,
     _temp_dir: TempDir,
 }
 
 impl TestEnvironment {
     fn new() -> Self {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
-        let config = MindCacheConfig {
+        let config = MemexConfig {
             database_path: temp_dir
                 .path()
                 .join("integration_test.db")

@@ -1,11 +1,11 @@
-//! Performance benchmarks for MindCache
+//! Performance benchmarks for Memex
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use mindcache_core::core::memory::MemoryManager;
-use mindcache_core::core::session::SessionManager;
-use mindcache_core::core::{MindCacheConfig, RequestValidator};
-use mindcache_core::database::models::*;
-use mindcache_core::database::{Database, DatabaseConfig};
+use memex_core::core::memory::MemoryManager;
+use memex_core::core::session::SessionManager;
+use memex_core::core::{MemexConfig, RequestValidator};
+use memex_core::database::models::*;
+use memex_core::database::{Database, DatabaseConfig};
 use std::collections::HashMap;
 use tempfile::TempDir;
 
@@ -22,7 +22,7 @@ fn setup_benchmark_env() -> (MemoryManager, SessionManager, TempDir) {
     };
 
     let database = Database::new(db_config).unwrap();
-    let config = MindCacheConfig {
+    let config = MemexConfig {
         enable_request_limits: false, // Disable for accurate benchmarking
         ..Default::default()
     };
@@ -306,7 +306,7 @@ fn bench_batch_operations(c: &mut Criterion) {
             })
             .collect();
 
-        let batch_request = mindcache_core::core::BatchRequest {
+        let batch_request = memex_core::core::BatchRequest {
             items: memories,
             fail_on_error: false,
         };
@@ -436,7 +436,7 @@ fn bench_memory_update_operations(c: &mut Criterion) {
     group.bench_function("update_content", |b| {
         let mut counter = 0;
         b.iter(|| {
-            let update = mindcache_core::core::memory::MemoryUpdate {
+            let update = memex_core::core::memory::MemoryUpdate {
                 content: Some(format!("Updated content {}", counter)),
                 importance: None,
                 metadata: None,
@@ -451,7 +451,7 @@ fn bench_memory_update_operations(c: &mut Criterion) {
     group.bench_function("update_importance", |b| {
         let mut counter = 0;
         b.iter(|| {
-            let update = mindcache_core::core::memory::MemoryUpdate {
+            let update = memex_core::core::memory::MemoryUpdate {
                 content: None,
                 importance: Some(0.3 + (counter % 7) as f32 * 0.1),
                 metadata: None,
@@ -469,7 +469,7 @@ fn bench_memory_update_operations(c: &mut Criterion) {
             let mut metadata = HashMap::new();
             metadata.insert("updated".to_string(), counter.to_string());
 
-            let update = mindcache_core::core::memory::MemoryUpdate {
+            let update = memex_core::core::memory::MemoryUpdate {
                 content: None,
                 importance: None,
                 metadata: Some(metadata),
@@ -491,13 +491,13 @@ fn bench_ffi_operations(c: &mut Criterion) {
 
     group.bench_function("ffi_init_destroy", |b| {
         b.iter(|| {
-            let handle = mindcache_core::mindcache_init();
+            let handle = memex_core::memex_init();
             black_box(handle);
-            mindcache_core::mindcache_destroy(handle);
+            memex_core::memex_destroy(handle);
         })
     });
 
-    let handle = mindcache_core::mindcache_init();
+    let handle = memex_core::memex_init();
     let user_id = CString::new("ffi_bench_user").unwrap();
     let session_id = CString::new("ffi_bench_session").unwrap();
     let metadata = CString::new("{}").unwrap();
@@ -506,7 +506,7 @@ fn bench_ffi_operations(c: &mut Criterion) {
         let mut counter = 0;
         b.iter(|| {
             let content = CString::new(format!("FFI benchmark content {}", counter)).unwrap();
-            let result = mindcache_core::mindcache_save(
+            let result = memex_core::memex_save(
                 handle,
                 user_id.as_ptr(),
                 session_id.as_ptr(),
@@ -516,7 +516,7 @@ fn bench_ffi_operations(c: &mut Criterion) {
                 metadata.as_ptr(),
             );
             if !result.is_null() {
-                mindcache_core::mindcache_free_string(result);
+                memex_core::memex_free_string(result);
             }
             counter += 1;
             black_box(result)
@@ -532,15 +532,15 @@ fn bench_ffi_operations(c: &mut Criterion) {
         let filter_cstring = CString::new(filter_str).unwrap();
 
         b.iter(|| {
-            let result = mindcache_core::mindcache_recall(handle, filter_cstring.as_ptr());
+            let result = memex_core::memex_recall(handle, filter_cstring.as_ptr());
             if !result.is_null() {
-                mindcache_core::mindcache_free_string(result);
+                memex_core::memex_free_string(result);
             }
             black_box(result)
         })
     });
 
-    mindcache_core::mindcache_destroy(handle);
+    memex_core::memex_destroy(handle);
     group.finish();
 }
 

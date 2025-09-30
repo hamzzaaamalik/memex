@@ -2,7 +2,7 @@
 //!
 //! Tests the C API that Node.js will use
 
-use mindcache_core::*;
+use memex_core::*;
 use serial_test::serial;
 use std::ffi::{CStr, CString};
 use std::ptr;
@@ -12,12 +12,12 @@ use tempfile::TempDir;
 #[serial]
 fn test_ffi_initialization_and_cleanup() {
     // Test default initialization
-    let handle = mindcache_init();
+    let handle = memex_init();
     assert_ne!(handle, 0, "Default initialization should succeed");
-    assert!(mindcache_is_valid(handle), "Handle should be valid");
+    assert!(memex_is_valid(handle), "Handle should be valid");
 
     // Test version retrieval
-    let version_ptr = mindcache_version();
+    let version_ptr = memex_version();
     assert!(!version_ptr.is_null(), "Version should be available");
 
     let version_cstr = unsafe { CStr::from_ptr(version_ptr) };
@@ -27,12 +27,12 @@ fn test_ffi_initialization_and_cleanup() {
     assert!(!version_str.is_empty(), "Version should not be empty");
     println!("Library version: {}", version_str);
 
-    mindcache_free_string(version_ptr);
+    memex_free_string(version_ptr);
 
     // Test cleanup
-    mindcache_destroy(handle);
+    memex_destroy(handle);
     assert!(
-        !mindcache_is_valid(handle),
+        !memex_is_valid(handle),
         "Handle should be invalid after destroy"
     );
 }
@@ -59,17 +59,17 @@ fn test_ffi_custom_config_initialization() {
     let config_str = config.to_string();
     let config_cstring = CString::new(config_str).expect("Should create config string");
 
-    let handle = mindcache_init_with_config(config_cstring.as_ptr());
+    let handle = memex_init_with_config(config_cstring.as_ptr());
     assert_ne!(handle, 0, "Config initialization should succeed");
-    assert!(mindcache_is_valid(handle), "Handle should be valid");
+    assert!(memex_is_valid(handle), "Handle should be valid");
 
-    mindcache_destroy(handle);
+    memex_destroy(handle);
 }
 
 #[test]
 #[serial]
 fn test_ffi_memory_operations() {
-    let handle = mindcache_init();
+    let handle = memex_init();
     assert_ne!(handle, 0);
 
     let user_id = CString::new("ffi_test_user").unwrap();
@@ -78,7 +78,7 @@ fn test_ffi_memory_operations() {
     let metadata = CString::new(r#"{"category":"test","priority":"high"}"#).unwrap();
 
     // Test save memory
-    let memory_id_ptr = mindcache_save(
+    let memory_id_ptr = memex_save(
         handle,
         user_id.as_ptr(),
         session_id.as_ptr(),
@@ -101,10 +101,10 @@ fn test_ffi_memory_operations() {
     // Keep a copy of the memory ID for later use
     let memory_id_copy = CString::new(memory_id).unwrap();
 
-    mindcache_free_string(memory_id_ptr);
+    memex_free_string(memory_id_ptr);
 
     // Test get memory
-    let retrieved_ptr = mindcache_get_memory(handle, memory_id_copy.as_ptr());
+    let retrieved_ptr = memex_get_memory(handle, memory_id_copy.as_ptr());
     assert!(!retrieved_ptr.is_null(), "Should retrieve saved memory");
 
     let retrieved_cstr = unsafe { CStr::from_ptr(retrieved_ptr) };
@@ -121,7 +121,7 @@ fn test_ffi_memory_operations() {
     assert_eq!(retrieved_memory["content"], "FFI test memory content");
     assert_eq!(retrieved_memory["importance"], 0.8);
 
-    mindcache_free_string(retrieved_ptr);
+    memex_free_string(retrieved_ptr);
 
     // Test update memory
     let update_json = serde_json::json!({
@@ -131,11 +131,11 @@ fn test_ffi_memory_operations() {
     let update_str = update_json.to_string();
     let update_cstring = CString::new(update_str).unwrap();
 
-    let updated = mindcache_update_memory(handle, memory_id_copy.as_ptr(), update_cstring.as_ptr());
+    let updated = memex_update_memory(handle, memory_id_copy.as_ptr(), update_cstring.as_ptr());
     assert!(updated, "Memory update should succeed");
 
     // Verify update
-    let updated_ptr = mindcache_get_memory(handle, memory_id_copy.as_ptr());
+    let updated_ptr = memex_get_memory(handle, memory_id_copy.as_ptr());
     assert!(!updated_ptr.is_null());
 
     let updated_cstr = unsafe { CStr::from_ptr(updated_ptr) };
@@ -145,26 +145,26 @@ fn test_ffi_memory_operations() {
     assert_eq!(updated_memory["content"], "Updated FFI test content");
     assert_eq!(updated_memory["importance"], 0.9);
 
-    mindcache_free_string(updated_ptr);
+    memex_free_string(updated_ptr);
 
     // Test delete memory
-    let deleted = mindcache_delete_memory(handle, memory_id_copy.as_ptr());
+    let deleted = memex_delete_memory(handle, memory_id_copy.as_ptr());
     assert!(deleted, "Memory deletion should succeed");
 
     // Verify deletion
-    let not_found_ptr = mindcache_get_memory(handle, memory_id_copy.as_ptr());
+    let not_found_ptr = memex_get_memory(handle, memory_id_copy.as_ptr());
     assert!(
         not_found_ptr.is_null(),
         "Deleted memory should not be found"
     );
 
-    mindcache_destroy(handle);
+    memex_destroy(handle);
 }
 
 #[test]
 #[serial]
 fn test_ffi_batch_operations() {
-    let handle = mindcache_init();
+    let handle = memex_init();
     assert_ne!(handle, 0);
 
     // Create batch of memories
@@ -196,7 +196,7 @@ fn test_ffi_batch_operations() {
     let memories_cstring = CString::new(memories_str).unwrap();
 
     // Test batch save with fail_on_error = false
-    let batch_result_ptr = mindcache_save_batch(
+    let batch_result_ptr = memex_save_batch(
         handle,
         memories_cstring.as_ptr(),
         false, // fail_on_error
@@ -214,14 +214,14 @@ fn test_ffi_batch_operations() {
     assert_eq!(batch_response["success_count"], 2);
     assert_eq!(batch_response["error_count"], 1);
 
-    mindcache_free_string(batch_result_ptr);
-    mindcache_destroy(handle);
+    memex_free_string(batch_result_ptr);
+    memex_destroy(handle);
 }
 
 #[test]
 #[serial]
 fn test_ffi_recall_and_search() {
-    let handle = mindcache_init();
+    let handle = memex_init();
     assert_ne!(handle, 0);
 
     let user_id = CString::new("search_user").unwrap();
@@ -242,7 +242,7 @@ fn test_ffi_recall_and_search() {
         let content_cstring = CString::new(content).unwrap();
         let metadata_cstring = CString::new("{}").unwrap();
 
-        let memory_id_ptr = mindcache_save(
+        let memory_id_ptr = memex_save(
             handle,
             user_id.as_ptr(),
             session_id.as_ptr(),
@@ -253,7 +253,7 @@ fn test_ffi_recall_and_search() {
         );
 
         assert!(!memory_id_ptr.is_null());
-        mindcache_free_string(memory_id_ptr);
+        memex_free_string(memory_id_ptr);
     }
 
     // Test recall with filter
@@ -265,7 +265,7 @@ fn test_ffi_recall_and_search() {
     let filter_str = filter.to_string();
     let filter_cstring = CString::new(filter_str).unwrap();
 
-    let recall_result_ptr = mindcache_recall(handle, filter_cstring.as_ptr());
+    let recall_result_ptr = memex_recall(handle, filter_cstring.as_ptr());
     assert!(!recall_result_ptr.is_null(), "Recall should return results");
 
     let recall_cstr = unsafe { CStr::from_ptr(recall_result_ptr) };
@@ -275,11 +275,11 @@ fn test_ffi_recall_and_search() {
     assert_eq!(recall_response["data"].as_array().unwrap().len(), 4);
     assert_eq!(recall_response["total_count"], 4);
 
-    mindcache_free_string(recall_result_ptr);
+    memex_free_string(recall_result_ptr);
 
     // Test search
     let query = CString::new("Apple stock").unwrap();
-    let search_result_ptr = mindcache_search(
+    let search_result_ptr = memex_search(
         handle,
         user_id.as_ptr(),
         query.as_ptr(),
@@ -299,21 +299,21 @@ fn test_ffi_recall_and_search() {
         .unwrap()
         .contains("Apple"));
 
-    mindcache_free_string(search_result_ptr);
-    mindcache_destroy(handle);
+    memex_free_string(search_result_ptr);
+    memex_destroy(handle);
 }
 
 #[test]
 #[serial]
 fn test_ffi_session_operations() {
-    let handle = mindcache_init();
+    let handle = memex_init();
     assert_ne!(handle, 0);
 
     let user_id = CString::new("session_user").unwrap();
     let session_name = CString::new("Test Session").unwrap();
 
     // Test create session
-    let session_id_ptr = mindcache_create_session(handle, user_id.as_ptr(), session_name.as_ptr());
+    let session_id_ptr = memex_create_session(handle, user_id.as_ptr(), session_name.as_ptr());
 
     assert!(!session_id_ptr.is_null(), "Session creation should succeed");
 
@@ -322,14 +322,14 @@ fn test_ffi_session_operations() {
     assert!(!session_id.is_empty());
 
     let session_id_copy = CString::new(session_id).unwrap();
-    mindcache_free_string(session_id_ptr);
+    memex_free_string(session_id_ptr);
 
     // Add some memories to the session
     for i in 0..5 {
         let content = CString::new(format!("Session memory {}", i)).unwrap();
         let metadata = CString::new("{}").unwrap();
 
-        let memory_id_ptr = mindcache_save(
+        let memory_id_ptr = memex_save(
             handle,
             user_id.as_ptr(),
             session_id_copy.as_ptr(),
@@ -340,11 +340,11 @@ fn test_ffi_session_operations() {
         );
 
         assert!(!memory_id_ptr.is_null());
-        mindcache_free_string(memory_id_ptr);
+        memex_free_string(memory_id_ptr);
     }
 
     // Test get user sessions
-    let sessions_result_ptr = mindcache_get_user_sessions(
+    let sessions_result_ptr = memex_get_user_sessions(
         handle,
         user_id.as_ptr(),
         10, // limit
@@ -361,10 +361,10 @@ fn test_ffi_session_operations() {
     assert_eq!(sessions_response["data"][0]["memory_count"], 5);
     assert_eq!(sessions_response["data"][0]["name"], "Test Session");
 
-    mindcache_free_string(sessions_result_ptr);
+    memex_free_string(sessions_result_ptr);
 
     // Test session summary
-    let summary_result_ptr = mindcache_summarize_session(handle, session_id_copy.as_ptr());
+    let summary_result_ptr = memex_summarize_session(handle, session_id_copy.as_ptr());
 
     if !summary_result_ptr.is_null() {
         let summary_cstr = unsafe { CStr::from_ptr(summary_result_ptr) };
@@ -378,7 +378,7 @@ fn test_ffi_session_operations() {
             .unwrap()
             .is_empty());
 
-        mindcache_free_string(summary_result_ptr);
+        memex_free_string(summary_result_ptr);
     } else {
         println!("Session summary failed - this might be expected for small sessions");
     }
@@ -389,7 +389,7 @@ fn test_ffi_session_operations() {
     let keywords_cstring = CString::new(keywords_str).unwrap();
 
     let search_sessions_ptr =
-        mindcache_search_sessions(handle, user_id.as_ptr(), keywords_cstring.as_ptr());
+        memex_search_sessions(handle, user_id.as_ptr(), keywords_cstring.as_ptr());
 
     assert!(
         !search_sessions_ptr.is_null(),
@@ -403,19 +403,19 @@ fn test_ffi_session_operations() {
 
     assert_eq!(search_sessions_response.as_array().unwrap().len(), 1);
 
-    mindcache_free_string(search_sessions_ptr);
+    memex_free_string(search_sessions_ptr);
 
     // Test delete session
-    let deleted = mindcache_delete_session(handle, session_id_copy.as_ptr(), true);
+    let deleted = memex_delete_session(handle, session_id_copy.as_ptr(), true);
     assert!(deleted, "Session deletion should succeed");
 
-    mindcache_destroy(handle);
+    memex_destroy(handle);
 }
 
 #[test]
 #[serial]
 fn test_ffi_decay_operations() {
-    let handle = mindcache_init();
+    let handle = memex_init();
     assert_ne!(handle, 0);
 
     let user_id = CString::new("decay_user").unwrap();
@@ -432,7 +432,7 @@ fn test_ffi_decay_operations() {
         let content_cstring = CString::new(content).unwrap();
         let metadata_cstring = CString::new("{}").unwrap();
 
-        let memory_id_ptr = mindcache_save(
+        let memory_id_ptr = memex_save(
             handle,
             user_id.as_ptr(),
             session_id.as_ptr(),
@@ -443,11 +443,11 @@ fn test_ffi_decay_operations() {
         );
 
         assert!(!memory_id_ptr.is_null());
-        mindcache_free_string(memory_id_ptr);
+        memex_free_string(memory_id_ptr);
     }
 
     // Test decay analysis
-    let analysis_result_ptr = mindcache_decay_analyze(handle);
+    let analysis_result_ptr = memex_decay_analyze(handle);
     assert!(
         !analysis_result_ptr.is_null(),
         "Decay analysis should succeed"
@@ -460,10 +460,10 @@ fn test_ffi_decay_operations() {
     assert!(analysis_response["total_memories"].as_u64().unwrap() >= 3);
     assert!(analysis_response["old_memory_percentage"].as_f64().unwrap() >= 0.0);
 
-    mindcache_free_string(analysis_result_ptr);
+    memex_free_string(analysis_result_ptr);
 
     // Test run decay
-    let decay_result_ptr = mindcache_decay(handle);
+    let decay_result_ptr = memex_decay(handle);
     assert!(!decay_result_ptr.is_null(), "Decay process should run");
 
     let decay_cstr = unsafe { CStr::from_ptr(decay_result_ptr) };
@@ -477,14 +477,14 @@ fn test_ffi_decay_operations() {
             || decay_response["status"].as_str().unwrap() == "failed"
     );
 
-    mindcache_free_string(decay_result_ptr);
-    mindcache_destroy(handle);
+    memex_free_string(decay_result_ptr);
+    memex_destroy(handle);
 }
 
 #[test]
 #[serial]
 fn test_ffi_statistics_and_analytics() {
-    let handle = mindcache_init();
+    let handle = memex_init();
     assert_ne!(handle, 0);
 
     let user_id = CString::new("stats_user").unwrap();
@@ -495,7 +495,7 @@ fn test_ffi_statistics_and_analytics() {
         let content = CString::new(format!("Statistics test memory {}", i)).unwrap();
         let metadata = CString::new(format!(r#"{{"index":"{}"}}"#, i)).unwrap();
 
-        let memory_id_ptr = mindcache_save(
+        let memory_id_ptr = memex_save(
             handle,
             user_id.as_ptr(),
             session_id.as_ptr(),
@@ -506,11 +506,11 @@ fn test_ffi_statistics_and_analytics() {
         );
 
         assert!(!memory_id_ptr.is_null());
-        mindcache_free_string(memory_id_ptr);
+        memex_free_string(memory_id_ptr);
     }
 
     // Test system statistics
-    let stats_result_ptr = mindcache_get_stats(handle);
+    let stats_result_ptr = memex_get_stats(handle);
     assert!(!stats_result_ptr.is_null(), "Should get system statistics");
 
     let stats_cstr = unsafe { CStr::from_ptr(stats_result_ptr) };
@@ -520,10 +520,10 @@ fn test_ffi_statistics_and_analytics() {
     // Verify basic structure exists
     assert!(stats_response.is_object());
 
-    mindcache_free_string(stats_result_ptr);
+    memex_free_string(stats_result_ptr);
 
     // Test user statistics
-    let user_stats_ptr = mindcache_get_user_stats(handle, user_id.as_ptr());
+    let user_stats_ptr = memex_get_user_stats(handle, user_id.as_ptr());
     assert!(!user_stats_ptr.is_null(), "Should get user statistics");
 
     let user_stats_cstr = unsafe { CStr::from_ptr(user_stats_ptr) };
@@ -533,10 +533,10 @@ fn test_ffi_statistics_and_analytics() {
     assert_eq!(user_stats_response["total_memories"], 10);
     assert!(user_stats_response["avg_importance"].as_f64().unwrap() > 0.0);
 
-    mindcache_free_string(user_stats_ptr);
+    memex_free_string(user_stats_ptr);
 
     // Test session analytics
-    let session_analytics_ptr = mindcache_get_session_analytics(handle, user_id.as_ptr());
+    let session_analytics_ptr = memex_get_session_analytics(handle, user_id.as_ptr());
     assert!(
         !session_analytics_ptr.is_null(),
         "Should get session analytics"
@@ -550,10 +550,10 @@ fn test_ffi_statistics_and_analytics() {
     assert_eq!(session_analytics_response["total_sessions"], 1);
     assert_eq!(session_analytics_response["total_memories"], 10);
 
-    mindcache_free_string(session_analytics_ptr);
+    memex_free_string(session_analytics_ptr);
 
     // Test export
-    let export_result_ptr = mindcache_export_user_memories(handle, user_id.as_ptr());
+    let export_result_ptr = memex_export_user_memories(handle, user_id.as_ptr());
     assert!(!export_result_ptr.is_null(), "Should export user memories");
 
     let export_cstr = unsafe { CStr::from_ptr(export_result_ptr) };
@@ -562,15 +562,15 @@ fn test_ffi_statistics_and_analytics() {
 
     assert_eq!(export_memories.as_array().unwrap().len(), 10);
 
-    mindcache_free_string(export_result_ptr);
-    mindcache_destroy(handle);
+    memex_free_string(export_result_ptr);
+    memex_destroy(handle);
 }
 
 #[test]
 #[serial]
 fn test_ffi_error_handling() {
     // Test with invalid handle
-    assert!(mindcache_save(
+    assert!(memex_save(
         0,
         ptr::null(),
         ptr::null(),
@@ -580,15 +580,15 @@ fn test_ffi_error_handling() {
         ptr::null()
     )
     .is_null());
-    assert!(mindcache_recall(0, ptr::null()).is_null());
-    assert!(!mindcache_is_valid(0));
+    assert!(memex_recall(0, ptr::null()).is_null());
+    assert!(!memex_is_valid(0));
 
     // Test with null parameters
-    let handle = mindcache_init();
+    let handle = memex_init();
     assert_ne!(handle, 0);
 
     // Save with null parameters should fail
-    assert!(mindcache_save(
+    assert!(memex_save(
         handle,
         ptr::null(),
         ptr::null(),
@@ -600,20 +600,20 @@ fn test_ffi_error_handling() {
     .is_null());
 
     // Get memory with null ID should fail
-    assert!(mindcache_get_memory(handle, ptr::null()).is_null());
+    assert!(memex_get_memory(handle, ptr::null()).is_null());
 
     // Invalid JSON should be handled gracefully
     let invalid_json = CString::new("{ invalid json }").unwrap();
-    let invalid_handle = mindcache_init_with_config(invalid_json.as_ptr());
+    let invalid_handle = memex_init_with_config(invalid_json.as_ptr());
     assert_eq!(invalid_handle, 0, "Invalid JSON should return null handle");
 
-    mindcache_destroy(handle);
+    memex_destroy(handle);
 }
 
 #[test]
 #[serial]
 fn test_ffi_memory_management() {
-    let handle = mindcache_init();
+    let handle = memex_init();
     assert_ne!(handle, 0);
 
     let user_id = CString::new("memory_mgmt_user").unwrap();
@@ -626,7 +626,7 @@ fn test_ffi_memory_management() {
         let content = CString::new(format!("Memory management test {}", i)).unwrap();
         let metadata = CString::new("{}").unwrap();
 
-        let memory_id_ptr = mindcache_save(
+        let memory_id_ptr = memex_save(
             handle,
             user_id.as_ptr(),
             session_id.as_ptr(),
@@ -643,21 +643,21 @@ fn test_ffi_memory_management() {
 
     // Free all returned strings
     for string_ptr in returned_strings {
-        mindcache_free_string(string_ptr);
+        memex_free_string(string_ptr);
     }
 
     // Get stats to ensure everything is working
-    let stats_ptr = mindcache_get_stats(handle);
+    let stats_ptr = memex_get_stats(handle);
     assert!(!stats_ptr.is_null());
-    mindcache_free_string(stats_ptr);
+    memex_free_string(stats_ptr);
 
-    mindcache_destroy(handle);
+    memex_destroy(handle);
 }
 
 #[test]
 #[serial]
 fn test_ffi_unicode_handling() {
-    let handle = mindcache_init();
+    let handle = memex_init();
     assert_ne!(handle, 0);
 
     let user_id = CString::new("unicode_user").unwrap();
@@ -668,7 +668,7 @@ fn test_ffi_unicode_handling() {
     let content_cstring = CString::new(unicode_content).unwrap();
     let metadata = CString::new(r#"{"language":"multilingual","emoji":"🚀"}"#).unwrap();
 
-    let memory_id_ptr = mindcache_save(
+    let memory_id_ptr = memex_save(
         handle,
         user_id.as_ptr(),
         session_id.as_ptr(),
@@ -684,10 +684,10 @@ fn test_ffi_unicode_handling() {
     let memory_id = memory_id_cstr.to_str().unwrap();
     let memory_id_copy = CString::new(memory_id).unwrap();
 
-    mindcache_free_string(memory_id_ptr);
+    memex_free_string(memory_id_ptr);
 
     // Retrieve and verify Unicode content
-    let retrieved_ptr = mindcache_get_memory(handle, memory_id_copy.as_ptr());
+    let retrieved_ptr = memex_get_memory(handle, memory_id_copy.as_ptr());
     assert!(!retrieved_ptr.is_null());
 
     let retrieved_cstr = unsafe { CStr::from_ptr(retrieved_ptr) };
@@ -700,12 +700,12 @@ fn test_ffi_unicode_handling() {
         .unwrap()
         .contains("🚀"));
 
-    mindcache_free_string(retrieved_ptr);
+    memex_free_string(retrieved_ptr);
 
     // Test Unicode search
     let search_query = CString::new("世界").unwrap();
     let search_result_ptr =
-        mindcache_search(handle, user_id.as_ptr(), search_query.as_ptr(), 10, 0);
+        memex_search(handle, user_id.as_ptr(), search_query.as_ptr(), 10, 0);
 
     assert!(!search_result_ptr.is_null(), "Should find Unicode content");
 
@@ -715,14 +715,14 @@ fn test_ffi_unicode_handling() {
 
     assert_eq!(search_response["data"].as_array().unwrap().len(), 1);
 
-    mindcache_free_string(search_result_ptr);
-    mindcache_destroy(handle);
+    memex_free_string(search_result_ptr);
+    memex_destroy(handle);
 }
 
 #[test]
 #[serial]
 fn test_ffi_concurrent_access() {
-    let handle = mindcache_init();
+    let handle = memex_init();
     assert_ne!(handle, 0);
 
     // Test concurrent operations (simulated with sequential calls)
@@ -736,7 +736,7 @@ fn test_ffi_concurrent_access() {
         let content = CString::new(format!("Concurrent memory {}", i)).unwrap();
         let metadata = CString::new("{}").unwrap();
 
-        let memory_id_ptr = mindcache_save(
+        let memory_id_ptr = memex_save(
             handle,
             user_id.as_ptr(),
             session_id.as_ptr(),
@@ -750,7 +750,7 @@ fn test_ffi_concurrent_access() {
             let memory_id_cstr = unsafe { CStr::from_ptr(memory_id_ptr) };
             let memory_id = memory_id_cstr.to_str().unwrap().to_string();
             memory_ids.push(memory_id);
-            mindcache_free_string(memory_id_ptr);
+            memex_free_string(memory_id_ptr);
         }
     }
 
@@ -770,23 +770,23 @@ fn test_ffi_concurrent_access() {
         let filter_str = filter.to_string();
         let filter_cstring = CString::new(filter_str).unwrap();
 
-        let recall_ptr = mindcache_recall(handle, filter_cstring.as_ptr());
+        let recall_ptr = memex_recall(handle, filter_cstring.as_ptr());
         assert!(!recall_ptr.is_null(), "Concurrent recall should succeed");
-        mindcache_free_string(recall_ptr);
+        memex_free_string(recall_ptr);
     }
 
-    mindcache_destroy(handle);
+    memex_destroy(handle);
 }
 
 #[test]
 #[serial]
 fn test_ffi_error_codes() {
     // Test error code retrieval
-    let handle = mindcache_init();
+    let handle = memex_init();
     assert_ne!(handle, 0);
 
     // Cause an error (save with invalid parameters)
-    let result = mindcache_save(
+    let result = memex_save(
         handle,
         ptr::null(),
         ptr::null(),
@@ -798,34 +798,34 @@ fn test_ffi_error_codes() {
     assert!(result.is_null(), "Invalid save should fail");
 
     // Get last error
-    let error_code = mindcache_get_last_error();
+    let error_code = memex_get_last_error();
     assert_ne!(error_code, 0, "Should have an error code");
 
     // Get error message
-    let error_msg_ptr = mindcache_error_message(error_code);
+    let error_msg_ptr = memex_error_message(error_code);
     if !error_msg_ptr.is_null() {
         let error_msg_cstr = unsafe { CStr::from_ptr(error_msg_ptr) };
         let error_msg = error_msg_cstr.to_str().unwrap();
         assert!(!error_msg.is_empty(), "Error message should not be empty");
         println!("Error code {}: {}", error_code, error_msg);
-        mindcache_free_string(error_msg_ptr);
+        memex_free_string(error_msg_ptr);
     }
 
-    mindcache_destroy(handle);
+    memex_destroy(handle);
 }
 
 #[test]
 #[serial]
 fn test_ffi_multiple_instances() {
-    let handle1 = mindcache_init();
-    let handle2 = mindcache_init();
+    let handle1 = memex_init();
+    let handle2 = memex_init();
 
     assert_ne!(handle1, 0);
     assert_ne!(handle2, 0);
     assert_ne!(handle1, handle2, "Handles should be unique");
 
-    assert!(mindcache_is_valid(handle1));
-    assert!(mindcache_is_valid(handle2));
+    assert!(memex_is_valid(handle1));
+    assert!(memex_is_valid(handle2));
 
     // Operations on one handle shouldn't affect the other
     let user1 = CString::new("user1").unwrap();
@@ -834,7 +834,7 @@ fn test_ffi_multiple_instances() {
     let content = CString::new("content").unwrap();
     let metadata = CString::new("{}").unwrap();
 
-    let mem1_ptr = mindcache_save(
+    let mem1_ptr = memex_save(
         handle1,
         user1.as_ptr(),
         session.as_ptr(),
@@ -843,7 +843,7 @@ fn test_ffi_multiple_instances() {
         -1,
         metadata.as_ptr(),
     );
-    let mem2_ptr = mindcache_save(
+    let mem2_ptr = memex_save(
         handle2,
         user2.as_ptr(),
         session.as_ptr(),
@@ -856,18 +856,18 @@ fn test_ffi_multiple_instances() {
     assert!(!mem1_ptr.is_null());
     assert!(!mem2_ptr.is_null());
 
-    mindcache_free_string(mem1_ptr);
-    mindcache_free_string(mem2_ptr);
+    memex_free_string(mem1_ptr);
+    memex_free_string(mem2_ptr);
 
     // Destroy one handle
-    mindcache_destroy(handle1);
-    assert!(!mindcache_is_valid(handle1));
+    memex_destroy(handle1);
+    assert!(!memex_is_valid(handle1));
     assert!(
-        mindcache_is_valid(handle2),
+        memex_is_valid(handle2),
         "Other handle should still be valid"
     );
 
     // Clean up
-    mindcache_destroy(handle2);
-    assert!(!mindcache_is_valid(handle2));
+    memex_destroy(handle2);
+    assert!(!memex_is_valid(handle2));
 }

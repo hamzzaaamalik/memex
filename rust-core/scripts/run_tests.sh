@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Test runner script for MindCache
+# Test runner script for Memex
 
 set -e  # Exit on any error
 
-echo "🧪 Running MindCache Test Suite"
+echo "🧪 Running Memex Test Suite"
 echo "================================"
 
 # Colors for output

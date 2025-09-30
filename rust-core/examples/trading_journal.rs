@@ -1,7 +1,7 @@
 // examples/trading_journal.rs
 //! Advanced Trading Journal Example
 //!
-//! This example demonstrates using MindCache as a sophisticated trading journal
+//! This example demonstrates using Memex as a sophisticated trading journal
 //! with features like:
 //! - Trade logging with structured metadata
 //! - Performance analysis
@@ -10,8 +10,8 @@
 //! - Batch operations for importing historical data
 
 use chrono::{DateTime, Duration, Utc};
-use mindcache_core::database::models::*;
-use mindcache_core::*;
+use memex_core::database::models::*;
+use memex_core::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -47,11 +47,11 @@ struct RiskEvent {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("📈 MindCache Trading Journal Example");
+    println!("📈 Memex Trading Journal Example");
     println!("====================================\n");
 
-    // Setup MindCache for trading journal
-    let config = MindCacheConfig {
+    // Setup Memex for trading journal
+    let config = MemexConfig {
         database_path: "./examples/trading_journal.db".to_string(),
         default_memory_ttl_hours: Some(8760), // 1 year
         enable_compression: true,

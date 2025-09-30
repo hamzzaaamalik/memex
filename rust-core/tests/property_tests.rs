@@ -1,9 +1,9 @@
 //! Property-based tests using proptest
 
-use mindcache_core::core::memory::MemoryManager;
-use mindcache_core::core::{MindCacheConfig, RequestValidator};
-use mindcache_core::database::models::*;
-use mindcache_core::database::{Database, DatabaseConfig};
+use memex_core::core::memory::MemoryManager;
+use memex_core::core::{MemexConfig, RequestValidator};
+use memex_core::database::models::*;
+use memex_core::database::{Database, DatabaseConfig};
 use proptest::prelude::*;
 use std::collections::HashMap;
 use tempfile::TempDir;
@@ -63,7 +63,7 @@ fn setup_property_test_env() -> (MemoryManager, TempDir) {
     };
 
     let database = Database::new(db_config).unwrap();
-    let config = MindCacheConfig {
+    let config = MemexConfig {
         enable_request_limits: false,
         ..Default::default()
     };

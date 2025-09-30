@@ -2,15 +2,15 @@
 
 use anyhow::Result;
 #[cfg(all(feature = "async", feature = "vector-search"))]
-use mindcache_core::core::async_memory::AsyncMemoryManager;
+use memex_core::core::async_memory::AsyncMemoryManager;
 #[cfg(all(feature = "async", feature = "vector-search"))]
-use mindcache_core::core::{BatchRequest, MindCacheConfig, RequestValidator};
+use memex_core::core::{BatchRequest, MemexConfig, RequestValidator};
 #[cfg(all(feature = "async", feature = "vector-search"))]
-use mindcache_core::database::models::*;
+use memex_core::database::models::*;
 #[cfg(all(feature = "async", feature = "vector-search"))]
-use mindcache_core::database::vector::VectorConfig;
+use memex_core::database::vector::VectorConfig;
 #[cfg(all(feature = "async", feature = "vector-search"))]
-use mindcache_core::database::{async_db::AsyncDatabase, DatabaseConfig};
+use memex_core::database::{async_db::AsyncDatabase, DatabaseConfig};
 use std::collections::HashMap;
 use std::io::Write; // Add this import for flush()
 
@@ -19,7 +19,7 @@ use std::io::Write; // Add this import for flush()
 async fn main() -> Result<()> {
     env_logger::init();
 
-    println!("🚀 MindCache Async + Vector Search Demo");
+    println!("🚀 Memex Async + Vector Search Demo");
     println!("=======================================\n");
 
     // Setup async database with vector support
@@ -40,7 +40,7 @@ async fn main() -> Result<()> {
     println!("📊 Initializing async database with vector search...");
     let async_db = AsyncDatabase::new_with_vector(db_config, vector_config).await?;
 
-    let config = MindCacheConfig::default();
+    let config = MemexConfig::default();
     let validator = RequestValidator::new(&config);
     let memory_manager = AsyncMemoryManager::new(async_db, validator);
 

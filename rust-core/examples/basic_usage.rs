@@ -1,26 +1,26 @@
 // examples/basic_usage.rs
-//! Basic MindCache usage example
+//! Basic Memex usage example
 //!
-//! This example demonstrates the core functionality of MindCache:
-//! - Creating and configuring a MindCache instance
+//! This example demonstrates the core functionality of Memex:
+//! - Creating and configuring a Memex instance
 //! - Saving memories with different importance levels
 //! - Querying and filtering memories
 //! - Working with sessions
 //! - Basic memory management
 
-use mindcache_core::database::models::*;
-use mindcache_core::*;
+use memex_core::database::models::*;
+use memex_core::*;
 use std::collections::HashMap;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🧠 MindCache Basic Usage Example");
+    println!("🧠 Memex Basic Usage Example");
     println!("=================================\n");
 
-    // Step 1: Create and configure MindCache
-    println!("1. Setting up MindCache...");
+    // Step 1: Create and configure Memex
+    println!("1. Setting up Memex...");
 
-    let config = MindCacheConfig {
+    let config = MemexConfig {
         database_path: "./examples/basic_example.db".to_string(),
         default_memory_ttl_hours: Some(720), // 30 days
         enable_compression: true,
@@ -51,7 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let memory_manager = core::memory::MemoryManager::new(database.clone(), validator.clone());
     let session_manager = core::session::SessionManager::new(database.clone(), validator.clone());
 
-    println!("✅ MindCache initialized successfully\n");
+    println!("✅ Memex initialized successfully\n");
 
     // Step 2: Create a session for organizing memories
     println!("2. Creating a session...");
@@ -346,7 +346,7 @@ mod tests {
     #[tokio::test]
     async fn test_example_components() {
         // Test that the example components work
-        let config = MindCacheConfig::default();
+        let config = MemexConfig::default();
         assert!(config.validate().is_ok());
 
         let memory = MemoryItem::default();

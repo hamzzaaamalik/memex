@@ -766,7 +766,7 @@ Set up monitoring alerts for:
 |-------|----------|
 | **FFI/Rust compilation errors** | Use Docker deployment or ensure Rust toolchain is installed |
 | **No memories recalled** | Check TTL expiration, session ID, importance thresholds |
-| **CLI commands not working** | Run `npm link` in CLI directory or use `node mindcache.js` directly |
+| **CLI commands not working** | Run `npm link` in CLI directory or use `node memex.js` directly |
 | **API server won't start** | Verify Node.js version >=16, check port 3000 availability |
 | **High memory usage** | Enable compression, adjust TTL settings, run memory decay |
 | **Slow response times** | Check database file permissions, consider SSD storage |

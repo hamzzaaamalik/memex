@@ -1,21 +1,21 @@
 //! Performance comparison between sync and async operations
 
 use anyhow::Result;
-use mindcache_core::core::memory::MemoryManager;
-use mindcache_core::core::{MindCacheConfig, RequestValidator};
-use mindcache_core::database::models::*;
-use mindcache_core::database::{Database, DatabaseConfig};
+use memex_core::core::memory::MemoryManager;
+use memex_core::core::{MemexConfig, RequestValidator};
+use memex_core::database::models::*;
+use memex_core::database::{Database, DatabaseConfig};
 use std::time::Instant;
 
 #[cfg(feature = "async")]
-use mindcache_core::core::async_memory::AsyncMemoryManager;
+use memex_core::core::async_memory::AsyncMemoryManager;
 #[cfg(feature = "async")]
-use mindcache_core::database::async_db::AsyncDatabase;
+use memex_core::database::async_db::AsyncDatabase;
 
 fn main() -> Result<()> {
     env_logger::init();
 
-    println!("⚡ MindCache Performance Comparison");
+    println!("⚡ Memex Performance Comparison");
     println!("==================================\n");
 
     // Test configuration
@@ -67,7 +67,7 @@ fn setup_sync_test(num_operations: usize) -> Result<TestResults> {
     };
 
     let database = Database::new(db_config)?;
-    let config = MindCacheConfig::default();
+    let config = MemexConfig::default();
     let validator = RequestValidator::new(&config);
     let manager = MemoryManager::new(database, validator);
 
@@ -150,7 +150,7 @@ async fn setup_async_test(num_operations: usize) -> Result<TestResults> {
     };
 
     let async_db = AsyncDatabase::new(db_config).await?;
-    let config = MindCacheConfig::default();
+    let config = MemexConfig::default();
     let validator = RequestValidator::new(&config);
     let manager = AsyncMemoryManager::new(async_db, validator);
 

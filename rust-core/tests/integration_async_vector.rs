@@ -3,11 +3,11 @@
 #[cfg(all(feature = "async", feature = "vector-search"))]
 mod async_vector_tests {
     use super::super::*;
-    use mindcache_core::core::async_memory::AsyncMemoryManager;
-    use mindcache_core::core::{MindCacheConfig, RequestValidator};
-    use mindcache_core::database::async_db::AsyncDatabase;
-    use mindcache_core::database::models::*;
-    use mindcache_core::database::vector::VectorConfig;
+    use memex_core::core::async_memory::AsyncMemoryManager;
+    use memex_core::core::{MemexConfig, RequestValidator};
+    use memex_core::database::async_db::AsyncDatabase;
+    use memex_core::database::models::*;
+    use memex_core::database::vector::VectorConfig;
     use tempfile::TempDir;
     use tokio;
 
@@ -34,7 +34,7 @@ mod async_vector_tests {
         let async_db = AsyncDatabase::new_with_vector(db_config, vector_config)
             .await
             .unwrap();
-        let config = MindCacheConfig::default();
+        let config = MemexConfig::default();
         let validator = RequestValidator::new(&config);
         let manager = AsyncMemoryManager::new(async_db, validator);
 
