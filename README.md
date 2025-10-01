@@ -919,7 +919,7 @@ Memex is open source and free to use in both personal and commercial projects.
 - GitHub: [@hamzzaaamalik](https://github.com/hamzzaaamalik)
 - Project: Empowering AI agents with intelligent, persistent memory
 
-### 🤝 Community & Support
+### Community & Support
 
 - **GitHub Issues**: [Report bugs and request features](https://github.com/hamzzaaamalik/memex/issues)
 - **Discussions**: [Community discussions and Q&A](https://github.com/hamzzaaamalik/memex/discussions)
